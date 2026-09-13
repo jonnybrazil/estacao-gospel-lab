@@ -1,1 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estação Gospel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
 
+        /* Estilo do Ticker de Notícias */
+        .radio-ticker-box {
+            background: transparent;
+            padding: 10px 15px;
+            font-size: 16px;
+            color: inherit;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-in-out;
+            opacity: 1;
+        }
+        .radio-ticker-box.fade-out {
+            opacity: 0;
+        }
+
+        /* Estilo do Player */
+        .radio-player-container {
+            background-color: #ffffff;
+            padding: 20px 0;
+            margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Estilo da Caixa Sobre (Minimalista) */
+        .texto-expansivel-box {
+            background: transparent;
+            padding: 10px 15px;
+            font-size: 16px;
+            color: inherit;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .texto-expansivel-conteudo {
+            overflow: hidden;
+            max-height: 50px;
+            transition: max-height 0.5s ease-in-out;
+            line-height: 1.5;
+            width: 100%;
+        }
+        .texto-expansivel-botao {
+            margin-top: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+            letter-spacing: 1px;
+        }
+        .texto-expansivel-botao:hover {
+            opacity: 1;
+        }
+
+        .divider {
+            border-top: 1px solid #e0e0e0;
+            width: 100%;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Ticker de Avisos -->
+    <div id="radio-mensagens-container" class="radio-ticker-box">
+        <span id="radio-mensagem-texto">Carregando avisos...</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 2. Player de Áudio -->
+    <div class="radio-player-container">
+        <div style="padding: 0 10px; margin-bottom: 15px;">
+            <div style="font-size: 11px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span id="radio-dot" style="height: 8px; width: 8px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
+                <span style="letter-spacing: 0.5px;">AO VIVO</span>
+            </div>
+            <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
+                <span id="radio-icon" style="font-size: 18px; margin-right: 8px; line-height: 1;">&#9654;</span>
+                <span id="radio-status" style="font-weight: bold; font-size: 14px; letter-spacing: 0.5px;">INICIAR</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <audio id="radio-player-main" preload="auto" playsinline></audio>
+        <audio id="radio-player-fx" preload="auto" playsinline></audio>
+    </div>
+
+    <!-- 3. Caixa Sobre Dinâmica -->
+    <div class="texto-expansivel-box">
+        <div id="conteudo-estatico" class="texto-expansivel-conteudo" style="max-height: 50px;">
+            <p style="margin: 0 0 10px 0;">Carregando informações...</p>
+        </div>
+        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">VER MAIS</span>
+    </div>
+
+    <script>
+        const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
+        const PLAYLIST_URL = BASE_URL + 'playlist.csv';
+        const ANNOUNCEMENTS_URL = BASE_URL + 'announcements.csv';
+        const NEWS_URL = BASE_URL + 'news.txt';
+        const SOBRE_URL = BASE_URL + 'sobre.txt';
+
+        let playlist = [];
+        let announcements = [];
+        let currentTrackIndex = 0;
+        let announcementIndex = 0;
+        let isPlaying = false;
+        let announcementTimer = null;
+        let currentMusicTitle = "";
+
+        const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000; // 7 minutos
+
+        async function parseCSV(url) {
+            try {
+                const response = await fetch(url + "?t=" + new Date().getTime());
+                const text = await response.text();
+                const lines = text.split('\n');
+                const result = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (matches && matches.length >= 3) {
+                        const title = matches[0].replace(/^"|"$/g, '');
+                        const fileUrl = matches[1].replace(/^"|"$/g, '');
+                        const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
+                        if (status === 'active') {
+                            result.push({ title, url: fileUrl });
+                        }
+                    }
+                }
+                return result;
+            } catch (error) {
+                console.error("Erro ao carregar CSV:", error);
+                return [];
+            }
+        }
+
+        async function initRadioData() {
+            playlist = await parseCSV(PLAYLIST_URL);
+            announcements = await parseCSV(ANNOUNCEMENTS_URL);
+        }
+
+        function updateMediaSession(title, isVinheta = false) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: title,
+                    artist: isVinheta ? 'Rádio - Vinheta' : 'Rádio Ao Vivo',
+                    album: 'Estação Gospel'
+                });
+            }
+        }
+
+        window.toggleRadio = async function() {
+            const statusEl = document.getElementById('radio-status');
+            const iconEl = document.getElementById('radio-icon');
+            const dotEl = document.getElementById('radio-dot');
+            const mainPlayer = document.getElementById('radio-player-main');
+            const fxPlayer = document.getElementById('radio-player-fx');
+
+            if (playlist.length === 0) {
+                statusEl.innerText = "CARREGANDO...";
+                await initRadioData();
+                if (playlist.length === 0) {
+                    statusEl.innerText = "ERRO NA PLAYLIST";
+                    return;
+                }
+            }
+
+            if (isPlaying) {
+                mainPlayer.pause();
+                fxPlayer.pause();
+                isPlaying = false;
+                clearTimeout(announcementTimer);
+                statusEl.innerText = playlist[currentTrackIndex]?.title || "PAUSADO";
+                iconEl.innerHTML = "&#9654;";
+                dotEl.style.backgroundColor = "#cccccc";
+            } else {
+                isPlaying = true;
+                iconEl.innerHTML = "&#10074;&#10074;";
+                dotEl.style.backgroundColor = "#2ecc71";
+                playNextTrack();
+                scheduleNextAnnouncement();
+            }
+        };
+
+        function fadeVolume(audioEl, targetVolume, duration, callback) {
+            const stepTime = 50;
+            const steps = duration / stepTime;
+            const volumeStep = (targetVolume - audioEl.volume) / steps;
+
+            const interval = setInterval(() => {
+                let newVolume = audioEl.volume + volumeStep;
+                if ((volumeStep > 0 && newVolume >= targetVolume) || (volumeStep < 0 && newVolume <= targetVolume)) {
+                    audioEl.volume = targetVolume;
+                    clearInterval(interval);
+                    if (callback) callback();
+                } else {
+                    audioEl.volume = newVolume;
+                }
+            }, stepTime);
+        }
+
+        function playNextTrack() {
+            if (!isPlaying || playlist.length === 0) return;
+
+            const mainPlayer = document.getElementById('radio-player-main');
+            const fxPlayer = document.getElementById('radio-player-fx');
+            const statusEl = document.getElementById('radio-status');
+            
+            const track = playlist[currentTrackIndex];
+            mainPlayer.src = track.url;
+            
+            const isFxPlaying = !fxPlayer.paused && fxPlayer.currentTime > 0 && !fxPlayer.ended;
+            mainPlayer.volume = isFxPlaying ? 0.2 : 1.0;
+
+            currentMusicTitle = track.title;
+            
+            if (!isFxPlaying) {
+                statusEl.innerText = currentMusicTitle;
+                updateMediaSession(currentMusicTitle, false);
+            }
+
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            
+            const playPromise = mainPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.warn("Recuperando segundo plano...", e);
+                    setTimeout(() => {
+                        if (isPlaying) mainPlayer.play().catch(err => console.error("Erro definitivo:", err));
+                    }, 3000);
+                });
+            }
+        }
+
+        function playAnnouncement() {
+            if (!isPlaying || announcements.length === 0) {
+                scheduleNextAnnouncement();
+                return;
+            }
+
+            const mainPlayer = document.getElementById('radio-player-main');
+            const fxPlayer = document.getElementById('radio-player-fx');
+            const statusEl = document.getElementById('radio-status');
+
+            const ann = announcements[announcementIndex];
+            fxPlayer.src = ann.url;
+            announcementIndex = (announcementIndex + 1) % announcements.length;
+
+            statusEl.innerText = "[VINHETA] " + ann.title;
+            updateMediaSession(ann.title, true);
+
+            fadeVolume(mainPlayer, 0.2, 1000, () => {
+                fxPlayer.play();
+            });
+
+            fxPlayer.onended = () => {
+                statusEl.innerText = currentMusicTitle;
+                updateMediaSession(currentMusicTitle, false);
+                fadeVolume(mainPlayer, 1.0, 1000, () => {
+                    scheduleNextAnnouncement();
+                });
+            };
+        }
+
+        function scheduleNextAnnouncement() {
+            clearTimeout(announcementTimer);
+            if (!isPlaying) return;
+            announcementTimer = setTimeout(playAnnouncement, ANNOUNCEMENT_INTERVAL_MS);
+        }
+
+        // Ticker Script
+        async function carregarAvisos() {
+            try {
+                const response = await fetch(NEWS_URL + "?t=" + new Date().getTime());
+                const data = await response.text();
+                const linhas = data.split("\n");
+                let mensagens = [];
+                for (let l of linhas) {
+                    let linha = l.trim();
+                    if (linha && !linha.startsWith("#")) mensagens.push(linha);
+                }
+                const elTexto = document.getElementById("radio-mensagem-texto");
+                const elContainer = document.getElementById("radio-mensagens-container");
+                if (mensagens.length > 0) {
+                    let idx = 0;
+                    elTexto.innerText = mensagens[idx];
+                    setInterval(() => {
+                        elContainer.classList.add("fade-out");
+                        setTimeout(() => {
+                            idx = (idx + 1) % mensagens.length;
+                            elTexto.innerText = mensagens[idx];
+                            elContainer.classList.remove("fade-out");
+                        }, 500);
+                    }, 10000);
+                } else {
+                    elTexto.innerText = "Acompanhe nossa programação.";
+                }
+            } catch (e) {
+                document.getElementById("radio-mensagem-texto").innerText = "Acompanhe nossa programação.";
+            }
+        }
+
+        // Sobre Script
+        async function carregarTextoSobre() {
+            try {
+                const response = await fetch(SOBRE_URL + "?t=" + new Date().getTime());
+                const texto = await response.text();
+                const linhas = texto.split("\n");
+                let htmlGerado = "";
+                for (let l of linhas) {
+                    let linha = l.trim();
+                    if (linha) htmlGerado += `<p style="margin: 0 0 10px 0;">${linha}</p>`;
+                }
+                if (htmlGerado) document.getElementById("conteudo-estatico").innerHTML = htmlGerado;
+            } catch (e) {
+                console.error("Erro ao carregar sobre.txt", e);
+            }
+        }
+
+        window.toggleTexto = function() {
+            const conteudo = document.getElementById('conteudo-estatico');
+            const botao = document.getElementById('botao-estatico');
+            if (conteudo.style.maxHeight === '50px') {
+                conteudo.style.maxHeight = '2000px';
+                botao.innerText = 'VER MENOS';
+            } else {
+                conteudo.style.maxHeight = '50px';
+                botao.innerText = 'VER MAIS';
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarAvisos();
+            carregarTextoSobre();
+
+            const mainPlayer = document.getElementById('radio-player-main');
+            mainPlayer.onended = () => {
+                if (isPlaying) setTimeout(playNextTrack, 500);
+            };
+            mainPlayer.onerror = () => {
+                if (isPlaying) setTimeout(playNextTrack, 2000);
+            };
+        });
+    </script>
+</body>
+</html>
