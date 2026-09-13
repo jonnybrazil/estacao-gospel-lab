@@ -3,33 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estação Gospel</title>
+    <title>Rádio Gospel Lab</title>
+    <!-- Importando uma fonte com estilo manual/minimalista semelhante ao modelo -->
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        <body>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffffff;
+            color: #222222;
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
 
-    <body>
+        /* Estilo dos Títulos Principais e de Seção */
+        .site-title {
+            font-family: 'Special Elite', cursive;
+            font-size: 32px;
+            letter-spacing: 2px;
+            margin: 0 0 5px 0;
+            color: #111;
+        }
 
-    <!-- Cabeçalho / Título Principal -->
-    <div style="text-align: center; margin: 20px 0 10px 0;">
-        <h1 style="font-size: 22px; font-weight: bold; letter-spacing: 0.5px; margin: 0; color: #111;">Estação Gospel</h1>
-    </div>
+        .site-subtitle {
+            font-family: 'Special Elite', cursive;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin: 0 0 35px 0;
+            color: #444;
+        }
 
-    <!-- 1. Ticker de Avisos -->
-    <div id="radio-mensagens-container" class="radio-ticker-box">
-        <span id="radio-mensagem-texto">Carregando avisos...</span>
-    </div>
+        .section-title {
+            font-family: 'Special Elite', cursive;
+            font-size: 20px;
+            text-align: left;
+            margin: 35px 0 15px 0;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
 
-        /* Estilo do Ticker de Notícias */
+        /* Estilo do Ticker de Avisos */
         .radio-ticker-box {
             background: transparent;
-            padding: 10px 15px;
-            font-size: 16px;
-            color: inherit;
-            text-align: center;
-            min-height: 40px;
+            padding: 10px 0;
+            font-size: 15px;
+            text-align: left;
+            min-height: 30px;
             display: flex;
             align-items: center;
-            justify-content: center;
             transition: opacity 0.5s ease-in-out;
             opacity: 1;
         }
@@ -40,38 +64,30 @@
         /* Estilo do Player */
         .radio-player-container {
             background-color: #ffffff;
-            padding: 20px 0;
-            margin-top: 20px;
+            text-align: left;
             width: 100%;
             box-sizing: border-box;
         }
 
-        /* Estilo da Caixa Sobre (Minimalista) */
+        /* Estilo da Caixa Sobre */
         .texto-expansivel-box {
             background: transparent;
-            padding: 10px 15px;
-            font-size: 16px;
-            color: inherit;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px;
+            text-align: left;
+            font-size: 15px;
+            line-height: 1.6;
         }
         .texto-expansivel-conteudo {
             overflow: hidden;
-            max-height: 50px;
+            max-height: 60px;
             transition: max-height 0.5s ease-in-out;
-            line-height: 1.5;
-            width: 100%;
         }
         .texto-expansivel-botao {
-            margin-top: 15px;
-            font-size: 13px;
+            margin-top: 12px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             opacity: 0.6;
-            transition: opacity 0.3s ease;
+            display: inline-block;
             letter-spacing: 1px;
         }
         .texto-expansivel-botao:hover {
@@ -81,45 +97,61 @@
         .divider {
             border-top: 1px solid #e0e0e0;
             width: 100%;
-            margin: 15px 0;
+            margin: 40px 0 20px 0;
+        }
+
+        footer {
+            font-size: 11px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. Ticker de Avisos -->
-    <div id="radio-mensagens-container" class="radio-ticker-box">
-        <span id="radio-mensagem-texto">Carregando avisos...</span>
-    </div>
+    <!-- Topo: Título e Subtítulo -->
+    <h1 class="site-title">RÁDIO GOSPEL LAB</h1>
+    <div id="radio-sub-titulo" class="site-subtitle">APRESENTANDO: CARREGANDO...</div>
 
-    <div class="divider"></div>
-
-    <!-- 2. Player de Áudio -->
+    <!-- Seção: Programação (Player) -->
+    <div class="section-title">PROGRAMAÇÃO</div>
     <div class="radio-player-container">
-        <div style="padding: 0 10px; margin-bottom: 15px;">
+        <div style="margin-bottom: 12px;">
             <div style="font-size: 11px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                 <span id="radio-dot" style="height: 8px; width: 8px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
                 <span style="letter-spacing: 0.5px;">AO VIVO</span>
             </div>
             <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 18px; margin-right: 8px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-weight: bold; font-size: 14px; letter-spacing: 0.5px;">INICIAR</span>
+                <span id="radio-icon" style="font-size: 18px; margin-right: 10px; line-height: 1;">&#9654;</span>
+                <span id="radio-status" style="font-weight: bold; font-size: 15px; letter-spacing: 0.5px;">INICIAR</span>
             </div>
         </div>
-
-        <div class="divider"></div>
-
         <audio id="radio-player-main" preload="auto" playsinline></audio>
         <audio id="radio-player-fx" preload="auto" playsinline></audio>
     </div>
 
-    <!-- 3. Caixa Sobre Dinâmica -->
+    <!-- Seção: Mensagem do Dia -->
+    <div class="section-title">MENSAGEM DO DIA</div>
     <div class="texto-expansivel-box">
-        <div id="conteudo-estatico" class="texto-expansivel-conteudo" style="max-height: 50px;">
+        <div id="conteudo-estatico" class="texto-expansivel-conteudo">
             <p style="margin: 0 0 10px 0;">Carregando informações...</p>
         </div>
         <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">VER MAIS</span>
     </div>
+
+    <!-- Seção: Avisos -->
+    <div class="section-title">AVISOS</div>
+    <div id="radio-mensagens-container" class="radio-ticker-box">
+        <span id="radio-mensagem-texto">Carregando avisos...</span>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="divider"></div>
+    <footer>
+        Copyright © 2026 Rádio Gospel Lab<br>
+        Hospedado no GitHub Pages
+    </footer>
 
     <script>
         const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
@@ -136,7 +168,7 @@
         let announcementTimer = null;
         let currentMusicTitle = "";
 
-        const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000; // 7 minutos
+        const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
         async function parseCSV(url) {
             try {
@@ -175,7 +207,7 @@
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: title,
                     artist: isVinheta ? 'Rádio - Vinheta' : 'Rádio Ao Vivo',
-                    album: 'Estação Gospel'
+                    album: 'Rádio Gospel Lab'
                 });
             }
         }
@@ -236,6 +268,7 @@
             const mainPlayer = document.getElementById('radio-player-main');
             const fxPlayer = document.getElementById('radio-player-fx');
             const statusEl = document.getElementById('radio-status');
+            const subTitleEl = document.getElementById('radio-sub-titulo');
             
             const track = playlist[currentTrackIndex];
             mainPlayer.src = track.url;
@@ -247,6 +280,7 @@
             
             if (!isFxPlaying) {
                 statusEl.innerText = currentMusicTitle;
+                subTitleEl.innerText = "APRESENTANDO: " + currentMusicTitle.toUpperCase();
                 updateMediaSession(currentMusicTitle, false);
             }
 
@@ -299,7 +333,6 @@
             announcementTimer = setTimeout(playAnnouncement, ANNOUNCEMENT_INTERVAL_MS);
         }
 
-        // Ticker Script
         async function carregarAvisos() {
             try {
                 const response = await fetch(NEWS_URL + "?t=" + new Date().getTime());
@@ -331,7 +364,6 @@
             }
         }
 
-        // Sobre Script
         async function carregarTextoSobre() {
             try {
                 const response = await fetch(SOBRE_URL + "?t=" + new Date().getTime());
@@ -351,11 +383,11 @@
         window.toggleTexto = function() {
             const conteudo = document.getElementById('conteudo-estatico');
             const botao = document.getElementById('botao-estatico');
-            if (conteudo.style.maxHeight === '50px') {
+            if (conteudo.style.maxHeight === '60px') {
                 conteudo.style.maxHeight = '2000px';
                 botao.innerText = 'VER MENOS';
             } else {
-                conteudo.style.maxHeight = '50px';
+                conteudo.style.maxHeight = '60px';
                 botao.innerText = 'VER MAIS';
             }
         };
@@ -363,6 +395,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             carregarAvisos();
             carregarTextoSobre();
+            document.getElementById("radio-sub-titulo").innerText = "APRESENTANDO: NENHUMA FAIXA NO AR";
 
             const mainPlayer = document.getElementById('radio-player-main');
             mainPlayer.onended = () => {
