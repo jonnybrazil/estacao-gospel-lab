@@ -175,24 +175,47 @@
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
                 const lines = text.split('\n');
-                let result = [];
+                
+                let sequenceString = "";
+                let catalog = {};
+
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    if (matches && matches.length >= 4) {
-                        const title = matches[0].replace(/^"|"$/g, '');
-                        const fileUrl = matches[1].replace(/^"|"$/g, '');
-                        const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
-                        const sequence = parseInt(matches[3].replace(/^"|"$/g, ''), 10) || 999;
-                        if (status === 'active') {
-                            result.push({ title, url: fileUrl, sequence });
+                    if (!matches) continue;
+
+                    // Se for a linha de comando mestre (geralmente na linha 2, onde a posição está vazia mas tem sequência na coluna D)
+                    if (i === 1 && matches.length >= 4) {
+                        sequenceString = matches[3].replace(/^"|"$/g, '');
+                    } 
+                    // Linhas do catálogo de músicas
+                    else if (matches.length >= 3) {
+                        const pos = matches[0].replace(/^"|"$/g, '');
+                        const title = matches[1].replace(/^"|"$/g, '');
+                        const fileUrl = matches[2].replace(/^"|"$/g, '');
+                        
+                        if (pos && title && fileUrl) {
+                            catalog[pos] = { title, url: fileUrl };
                         }
                     }
                 }
-                result.sort((a, b) => a.sequence - b.sequence);
+
+                // Se houver uma sequência definida, monta o array final cruzando os números com o catálogo
+                let result = [];
+                if (sequenceString) {
+                    const sequenceArray = sequenceString.split(',');
+                    for (let num of sequenceArray) {
+                        const trimmedNum = num.trim();
+                        if (catalog[trimmedNum]) {
+                            result.push(catalog[trimmedNum]);
+                        }
+                    }
+                }
+
                 return result;
             } catch (error) {
+                console.error("Erro ao processar CSV:", error);
                 return [];
             }
         }
