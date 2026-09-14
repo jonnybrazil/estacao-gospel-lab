@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gosppel Lab</title>
+    <title>Rádioo Gospel Lab</title>
     <!-- Importando as fontes Special Elite e Satisfy do Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -23,7 +23,7 @@
         /* Título Principal com a fonte Satisfy */
         .site-title {
             font-family: 'Satisfy', cursive;
-            font-size: 42px; /* Aumentado ligeiramente para valorizar o estilo caligráfico */
+            font-size: 42px;
             font-weight: normal;
             letter-spacing: 1px;
             margin: 0 0 5px 0;
@@ -169,10 +169,10 @@
         
         let audioCtx = null;
         let currentSource = null;
-        let gainNode = null;
+        let masterGain = null;
         let currentMusicTitle = "";
         let isPausedByUser = false;
-        let isAnnouncementPlaying = false;
+        let isBuildingPipeline = false;
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
@@ -241,8 +241,8 @@
         function initAudioContext() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                gainNode = audioCtx.createGain();
-                gainNode.connect(audioCtx.destination);
+                masterGain = audioCtx.createGain();
+                masterGain.connect(audioCtx.destination);
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -259,8 +259,8 @@
 
                 navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) toggleRadio(); });
                 navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) toggleRadio(); });
-                navigator.mediaSession.setActionHandler('previoustrack', () => { playNextTrack(); });
-                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextTrack(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { playNextPipelineSegment(); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextPipelineSegment(); });
             }
         }
 
@@ -296,28 +296,33 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                playNextTrack();
+                playNextPipelineSegment();
                 scheduleNextAnnouncement();
             }
         };
 
-        async function playAudioBuffer(url, title, isVinheta = false, onEndedCallback) {
-            if (!isPlaying) return;
+        async function playNextPipelineSegment() {
+            if (!isPlaying || playlist.length === 0 || isBuildingPipeline) return;
+            isBuildingPipeline = true;
 
             const statusEl = document.getElementById('radio-status');
-            if (!isVinheta) {
-                currentMusicTitle = title;
-            }
-            
-            statusEl.innerText = isVinheta ? ("[VINHETA] " + title) : title;
-            updateMediaSession(title, isVinheta);
+            const track = playlist[currentTrackIndex];
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+
+            currentMusicTitle = track.title;
+            statusEl.innerText = track.title;
+            updateMediaSession(track.title, false);
 
             try {
-                const response = await fetch(url);
+                // Baixa e decodifica a faixa atual
+                const response = await fetch(track.url);
                 const arrayBuffer = await response.arrayBuffer();
                 const decodedAudio = await audioCtx.decodeAudioData(arrayBuffer);
 
-                if (!isPlaying) return; 
+                if (!isPlaying) {
+                    isBuildingPipeline = false;
+                    return;
+                }
 
                 if (currentSource) {
                     try { currentSource.stop(); } catch(e){}
@@ -325,34 +330,24 @@
 
                 currentSource = audioCtx.createBufferSource();
                 currentSource.buffer = decodedAudio;
-                currentSource.connect(gainNode);
+                currentSource.connect(masterGain);
                 
                 currentSource.start(0);
+                isBuildingPipeline = false;
 
                 currentSource.onended = () => {
                     if (isPlaying && !isPausedByUser) {
-                        if (onEndedCallback) onEndedCallback();
+                        playNextPipelineSegment();
                     }
                 };
 
             } catch (err) {
-                console.error("Erro no buffer de áudio:", err);
+                console.error("Erro no pipeline de áudio:", err);
+                isBuildingPipeline = false;
                 if (isPlaying) {
-                    setTimeout(() => { if (onEndedCallback) onEndedCallback(); }, 1000);
+                    setTimeout(() => { playNextPipelineSegment(); }, 1000);
                 }
             }
-        }
-
-        function playNextTrack() {
-            if (!isPlaying || playlist.length === 0 || isAnnouncementPlaying) return;
-
-            const track = playlist[currentTrackIndex];
-            // Incrementa corretamente o índice para evitar repetição da mesma faixa
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-
-            playAudioBuffer(track.url, track.title, false, () => {
-                playNextTrack();
-            });
         }
 
         function playAnnouncement() {
@@ -361,7 +356,6 @@
                 return;
             }
 
-            isAnnouncementPlaying = true;
             if (currentSource) {
                 try { currentSource.stop(); } catch(e){}
             }
@@ -369,16 +363,32 @@
             const ann = announcements[announcementIndex];
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
-            playAudioBuffer(ann.url, ann.title, true, () => {
-                isAnnouncementPlaying = false;
-                if (isPlaying) {
-                    const statusEl = document.getElementById('radio-status');
-                    statusEl.innerText = currentMusicTitle;
-                    updateMediaSession(currentMusicTitle, false);
-                    playNextTrack(); // Retoma imediatamente a playlist sem delay
-                }
-                scheduleNextAnnouncement();
-            });
+            const statusEl = document.getElementById('radio-status');
+            statusEl.innerText = "[VINHETA] " + ann.title;
+            updateMediaSession(ann.title, true);
+
+            fetch(ann.url)
+                .then(res => res.arrayBuffer())
+                .then(buf => audioCtx.decodeAudioData(buf))
+                .then(decoded => {
+                    if (!isPlaying) return;
+                    currentSource = audioCtx.createBufferSource();
+                    currentSource.buffer = decoded;
+                    currentSource.connect(masterGain);
+                    currentSource.start(0);
+
+                    currentSource.onended = () => {
+                        if (isPlaying && !isPausedByUser) {
+                            playNextPipelineSegment();
+                        }
+                    };
+                })
+                .catch(err => {
+                    console.error("Erro na vinheta:", err);
+                    if (isPlaying) playNextPipelineSegment();
+                });
+
+            scheduleNextAnnouncement();
         }
 
         function scheduleNextAnnouncement() {
