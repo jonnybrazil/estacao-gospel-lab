@@ -182,26 +182,30 @@
                 let sequenceString = "";
                 let catalog = {};
 
-                for (let i = 0; i < lines.length; i++) {
+                for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
                     const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
-                    // Procura a linha que contém a sequência de números separados por vírgula
-                    for (let col of cols) {
-                        if (col && col.includes(',') && /\d/.test(col) && !sequenceString) {
-                            sequenceString = col;
-                        }
-                    }
+                    const tipo = cols[0];
+                    const chave = cols[1];
+                    const coluna3 = cols[2];
+                    const coluna4 = cols[3];
 
-                    // Lê o catálogo apenas se a primeira coluna tiver um número real (ignora vazios)
-                    const pos = cols[0];
-                    const title = cols[1];
-                    const fileUrl = cols[2];
-                    
-                    if (pos !== "" && !isNaN(pos) && fileUrl) {
-                        catalog[pos] = { title: title || "", url: fileUrl };
+                    // Se for a linha de sequência mestre
+                    if (tipo === "SEQ") {
+                        sequenceString = coluna3; // O texto da sequência está na terceira coluna (índice 2) ou ajustado conforme a linha
+                    } 
+                    // Se for um item do catálogo de áudios
+                    else if (tipo === "ITEM") {
+                        const id = chave;
+                        const title = coluna3;
+                        const fileUrl = coluna4;
+                        
+                        if (id && fileUrl) {
+                            catalog[id] = { title: title || "", url: fileUrl };
+                        }
                     }
                 }
 
