@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospel Lab</title>
+    <title>Rádio Gosppel Lab</title>
     <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -160,7 +160,7 @@
 
     <script>
         const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
-        const PLAYLIST_URL = BASE_URL + 'playlist.csv';
+        const PLAYLIST_URL = BASE_URL + 'playlist.json';
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
         const CACHE_NAME = 'gospel-lab-audio-v1';
@@ -176,56 +176,35 @@
         async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
-                const text = await response.text();
-                console.log("CSV Bruto recebido:", text); // Para ver o conteúdo exato no console
-
-                const lines = text.replace(/\r\n/g, '\n').split('\n');
+                const data = await response.json();
                 
-                let sequenceString = "";
-                let catalog = {};
-
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-
-                    const tipo = cols[0];
-                    const chave = cols[1];
-                    const coluna3 = cols[2];
-                    const coluna4 = cols[3];
-
-                    if (tipo === "SEQ") {
-                        // Procura em qual coluna está a string de números
-                        sequenceString = cols.find(c => c && c.includes(',')) || coluna3;
-                    } else if (tipo === "ITEM") {
-                        if (chave && coluna4) {
-                            catalog[chave] = { title: coluna3 || "", url: coluna4 };
-                        }
-                    }
-                }
-
                 let result = [];
-                if (sequenceString) {
-                    const sequenceArray = sequenceString.split(',');
-                    for (let num of sequenceArray) {
-                        const trimmedNum = num.trim();
-                        if (catalog[trimmedNum]) {
-                            result.push(catalog[trimmedNum]);
+                if (data.sequence && data.catalog) {
+                    for (let id of data.sequence) {
+                        const track = data.catalog[id];
+                        if (track) {
+                            result.push(track);
                         }
                     }
                 }
-
-                console.log("Sequência detectada:", sequenceString);
-                console.log("Catálogo montado:", catalog);
-                console.log("Playlist final gerada:", result);
-
                 return result;
             } catch (error) {
-                console.error("Erro ao processar CSV:", error);
+                console.error("Erro ao carregar playlist:", error);
                 return [];
             }
         }
+
+        async function initRadioData() {
+            playlist = await parsePlaylistCSV(PLAYLIST_URL);
+            
+            if ('caches' in window) {
+                const cache = await caches.open(CACHE_NAME);
+                for (let track of playlist) {
+                    try { cache.add(track.url); } catch(e){}
+                }
+            }
+        }
+
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
