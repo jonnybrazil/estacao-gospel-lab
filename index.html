@@ -188,17 +188,19 @@
                     
                     const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
+                    // Procura a linha que contém a sequência de números separados por vírgula
                     for (let col of cols) {
-                        if (col.includes(',') && /\d/.test(col) && !sequenceString) {
+                        if (col && col.includes(',') && /\d/.test(col) && !sequenceString) {
                             sequenceString = col;
                         }
                     }
 
+                    // Lê o catálogo apenas se a primeira coluna tiver um número real (ignora vazios)
                     const pos = cols[0];
                     const title = cols[1];
                     const fileUrl = cols[2];
                     
-                    if (pos && !isNaN(pos) && fileUrl) {
+                    if (pos !== "" && !isNaN(pos) && fileUrl) {
                         catalog[pos] = { title: title || "", url: fileUrl };
                     }
                 }
@@ -220,18 +222,6 @@
                 return [];
             }
         }
-
-        async function initRadioData() {
-            playlist = await parsePlaylistCSV(PLAYLIST_URL);
-            
-            if ('caches' in window) {
-                const cache = await caches.open(CACHE_NAME);
-                for (let track of playlist) {
-                    try { cache.add(track.url); } catch(e){}
-                }
-            }
-        }
-
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
