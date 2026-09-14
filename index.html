@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospel Lab</title>
+    <title>Rádio Gospell Lab</title>
     <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -109,10 +109,13 @@
             margin: 40px 0 20px 0;
         }
 
-        <footer>
-            Copyright © 2026 Rádio Gospel Lab<br>
-            Hospedado no GitHub Pages
-        </footer>
+        /* Rodapé com fonte bem menor */
+        footer {
+            font-size: 9px;
+            color: #777;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -166,11 +169,11 @@
         let currentTrackIndex = 0;
         let isPlaying = false;
         let isPausedByUser = false;
-        let isTransitioning = false; // Trava de segurança contra pulos duplos
+        let isTransitioning = false;
 
         const audioElement = document.getElementById('native-audio');
 
-       async function parsePlaylistCSV(url) {
+        async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
@@ -183,15 +186,13 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    // Divide a linha por vírgula de forma simples e limpa
                     const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
-                    // Se for a linha mestre (geralmente a linha 2, índice 1)
-                    // Verifica se a 4ª coluna (índice 3) tem números separados por vírgula
+                    // Linha mestre de sequência
                     if (cols.length >= 4 && cols[3] && cols[3].includes(',')) {
                         sequenceString = cols[3];
                     } 
-                    // Linhas do catálogo (posição, título, url)
+                    // Linhas do catálogo
                     else if (cols.length >= 3) {
                         const pos = cols[0];
                         const title = cols[1];
@@ -203,7 +204,6 @@
                     }
                 }
 
-                // Se houver uma sequência definida, monta o array final cruzando com o catálogo
                 let result = [];
                 if (sequenceString) {
                     const sequenceArray = sequenceString.split(',');
@@ -236,7 +236,7 @@
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: title,
+                    title: title || 'Rádio Gospel Lab',
                     artist: 'Rádio Gospel Lab',
                     album: 'Programação Ao Vivo'
                 });
@@ -287,13 +287,13 @@
             if (!isPlaying || playlist.length === 0 || isTransitioning) return;
             
             isTransitioning = true;
-            setTimeout(() => { isTransitioning = false; }, 1000); // Libera a trava após 1 segundo
+            setTimeout(() => { isTransitioning = false; }, 1000);
 
             const track = playlist[currentTrackIndex];
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
             const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title;
+            statusEl.innerText = track.title || ""; // Se for vazio (como a vinheta), limpa o texto na tela
             updateMediaSession(track.title);
 
             audioElement.src = track.url;
