@@ -177,6 +177,8 @@
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
+                console.log("CSV Bruto recebido:", text); // Para ver o conteúdo exato no console
+
                 const lines = text.replace(/\r\n/g, '\n').split('\n');
                 
                 let sequenceString = "";
@@ -193,18 +195,12 @@
                     const coluna3 = cols[2];
                     const coluna4 = cols[3];
 
-                    // Se for a linha de sequência mestre
                     if (tipo === "SEQ") {
-                        sequenceString = coluna3; // O texto da sequência está na terceira coluna (índice 2) ou ajustado conforme a linha
-                    } 
-                    // Se for um item do catálogo de áudios
-                    else if (tipo === "ITEM") {
-                        const id = chave;
-                        const title = coluna3;
-                        const fileUrl = coluna4;
-                        
-                        if (id && fileUrl) {
-                            catalog[id] = { title: title || "", url: fileUrl };
+                        // Procura em qual coluna está a string de números
+                        sequenceString = cols.find(c => c && c.includes(',')) || coluna3;
+                    } else if (tipo === "ITEM") {
+                        if (chave && coluna4) {
+                            catalog[chave] = { title: coluna3 || "", url: coluna4 };
                         }
                     }
                 }
@@ -219,6 +215,10 @@
                         }
                     }
                 }
+
+                console.log("Sequência detectada:", sequenceString);
+                console.log("Catálogo montado:", catalog);
+                console.log("Playlist final gerada:", result);
 
                 return result;
             } catch (error) {
