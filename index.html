@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rádio Gospel Lab</title>
-    <!-- Importando uma fonte com estilo manual/minimalista semelhante ao modelo -->
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Importando a fonte Special Elite para todo o site -->
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Special Elite', cursive;
             background-color: #ffffff;
             color: #222222;
             max-width: 650px;
@@ -16,28 +16,28 @@
             padding: 0 20px;
             box-sizing: border-box;
             text-align: center;
+            font-weight: normal;
         }
 
-        /* Estilo dos Títulos Principais e de Seção */
+        /* Título Principal maior, sem negrito */
         .site-title {
-            font-family: 'Special Elite', cursive;
-            font-size: 32px;
+            font-size: 38px;
+            font-weight: normal;
             letter-spacing: 2px;
             margin: 0 0 5px 0;
             color: #111;
         }
 
         .site-subtitle {
-            font-family: 'Special Elite', cursive;
-            font-size: 16px;
+            font-size: 15px;
             letter-spacing: 1px;
             margin: 0 0 35px 0;
             color: #444;
         }
 
         .section-title {
-            font-family: 'Special Elite', cursive;
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: normal;
             text-align: left;
             margin: 35px 0 15px 0;
             letter-spacing: 1px;
@@ -49,7 +49,7 @@
         .radio-ticker-box {
             background: transparent;
             padding: 10px 0;
-            font-size: 15px;
+            font-size: 14px;
             text-align: left;
             min-height: 30px;
             display: flex;
@@ -73,7 +73,7 @@
         .texto-expansivel-box {
             background: transparent;
             text-align: left;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
         }
         .texto-expansivel-conteudo {
@@ -83,10 +83,9 @@
         }
         .texto-expansivel-botao {
             margin-top: 12px;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 11px;
             cursor: pointer;
-            opacity: 0.6;
+            opacity: 0.7;
             display: inline-block;
             letter-spacing: 1px;
         }
@@ -123,8 +122,8 @@
                 <span style="letter-spacing: 0.5px;">AO VIVO</span>
             </div>
             <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 18px; margin-right: 10px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-weight: bold; font-size: 15px; letter-spacing: 0.5px;">INICIAR</span>
+                <span id="radio-icon" style="font-size: 16px; margin-right: 10px; line-height: 1;">&#9654;</span>
+                <span id="radio-status" style="font-size: 14px; letter-spacing: 0.5px;">INICIAR</span>
             </div>
         </div>
         <audio id="radio-player-main" preload="auto" playsinline></audio>
