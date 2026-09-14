@@ -320,17 +320,27 @@
             }
 
             const ann = announcements[announcementIndex];
+            // Avança o índice da vinheta para a próxima, mas NÃO mexe no currentTrackIndex da música!
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
             const statusEl = document.getElementById('radio-status');
             statusEl.innerText = "[Vinheta] " + ann.title;
             updateMediaSession(ann.title, true);
 
+            // Salva o tempo atual da música principal caso queira retomar, ou apenas pausa
             audioElement.src = ann.url;
             audioElement.play().catch(err => {
                 console.error("Erro na vinheta:", err);
                 setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
             });
+
+            // QUANDO A VINHETA ACABA:
+            audioElement.onended = () => {
+                if (isPlaying && !isPausedByUser) {
+                    // Aqui decidimos: ou toca a próxima música, ou segue o fluxo normal
+                    playNextTrack();
+                }
+            };
 
             scheduleNextAnnouncement();
         }
