@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rádio Gospel Lab</title>
-    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Special+Elite&display=swap" rel="stylesheet">
+    <!-- Importando Amatic SC para os títulos e Special Elite para o corpo -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <style>
         body {
@@ -19,30 +20,37 @@
             font-weight: normal;
         }
 
+        /* Título Principal com Amatic SC em destaque */
         .site-title {
-            font-family: 'Satisfy', cursive;
-            font-size: 42px;
-            font-weight: normal;
-            letter-spacing: 1px;
-            margin: 0 0 5px 0;
+            font-family: 'Amatic SC', cursive;
+            font-size: 64px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 0 0 0 0;
             color: #111;
+            line-height: 1;
         }
 
+        /* Subtítulo em 13px */
         .site-subtitle {
             font-size: 13px;
             letter-spacing: 1px;
-            margin: 0 0 35px 0;
+            margin: 10px 0 35px 0;
             color: #555;
+            text-transform: uppercase;
         }
 
+        /* Títulos das Seções com Amatic SC */
         .section-title {
-            font-size: 18px;
-            font-weight: normal;
+            font-family: 'Amatic SC', cursive;
+            font-size: 32px;
+            font-weight: 700;
             text-align: left;
             margin: 35px 0 15px 0;
             letter-spacing: 1px;
             border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+            padding-bottom: 2px;
+            line-height: 1;
         }
 
         .radio-ticker-box {
@@ -123,7 +131,6 @@
         </div>
     </div>
 
-    <!-- Elemento de áudio nativo invisível germanagedo pelo Script -->
     <audio id="native-audio" preload="auto"></audio>
 
     <div class="section-title">MENSAGEM DO DIA</div>
@@ -187,7 +194,6 @@
                 result.sort((a, b) => a.sequence - b.sequence);
                 return result;
             } catch (error) {
-                console.error("Erro ao carregar playlist CSV:", error);
                 return [];
             }
         }
@@ -221,7 +227,6 @@
             playlist = await parsePlaylistCSV(PLAYLIST_URL);
             announcements = await parseAnnouncementsCSV(ANNOUNCEMENTS_URL);
             
-            // Pré-carrega todos os áudios no Cache Storage do navegador para o Service Worker usar
             if ('caches' in window) {
                 const cache = await caches.open(CACHE_NAME);
                 for (let track of playlist) {
@@ -279,6 +284,12 @@
             }
         };
 
+        audioElement.addEventListener('ended', () => {
+            if (isPlaying && !isPausedByUser) {
+                playNextTrack();
+            }
+        });
+
         function playNextTrack() {
             if (!isPlaying || playlist.length === 0) return;
 
@@ -290,13 +301,10 @@
             updateMediaSession(track.title, false);
 
             audioElement.src = track.url;
-            audioElement.play().catch(err => console.error("Erro ao tocar:", err));
-
-            audioElement.onended = () => {
-                if (isPlaying && !isPausedByUser) {
-                    playNextTrack();
-                }
-            };
+            audioElement.play().catch(err => {
+                console.error("Erro ao tocar:", err);
+                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
+            });
         }
 
         function playAnnouncement() {
@@ -313,13 +321,10 @@
             updateMediaSession(ann.title, true);
 
             audioElement.src = ann.url;
-            audioElement.play().catch(err => console.error("Erro na vinheta:", err));
-
-            audioElement.onended = () => {
-                if (isPlaying && !isPausedByUser) {
-                    playNextTrack();
-                }
-            };
+            audioElement.play().catch(err => {
+                console.error("Erro na vinheta:", err);
+                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
+            });
 
             scheduleNextAnnouncement();
         }
@@ -387,14 +392,9 @@
             }
         };
 
-        // Registro do Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then((reg) => {
-                    console.log('Service Worker registrado com sucesso:', reg.scope);
-                }).catch((err) => {
-                    console.error('Falha ao registrar o Service Worker:', err);
-                });
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
             });
         }
 
