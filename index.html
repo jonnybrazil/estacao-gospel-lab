@@ -109,9 +109,9 @@
 </head>
 <body>
 
-    <!-- Topo: Título e Subtítulo -->
+    <!-- Topo: Título e Subtítulo Estático (Sponsor) -->
     <h1 class="site-title">RÁDIO GOSPEL LAB</h1>
-    <div id="radio-sub-titulo" class="site-subtitle">APRESENTANDO: CARREGANDO...</div>
+    <div class="site-subtitle">APRESENTANDO: IGREJA BATISTA LUZ</div>
 
     <!-- Seção: Programação (Player) -->
     <div class="section-title">PROGRAMAÇÃO</div>
@@ -267,7 +267,6 @@
             const mainPlayer = document.getElementById('radio-player-main');
             const fxPlayer = document.getElementById('radio-player-fx');
             const statusEl = document.getElementById('radio-status');
-            const subTitleEl = document.getElementById('radio-sub-titulo');
             
             const track = playlist[currentTrackIndex];
             mainPlayer.src = track.url;
@@ -279,7 +278,6 @@
             
             if (!isFxPlaying) {
                 statusEl.innerText = currentMusicTitle;
-                subTitleEl.innerText = "APRESENTANDO: " + currentMusicTitle.toUpperCase();
                 updateMediaSession(currentMusicTitle, false);
             }
 
@@ -394,7 +392,6 @@
         document.addEventListener("DOMContentLoaded", () => {
             carregarAvisos();
             carregarTextoSobre();
-            document.getElementById("radio-sub-titulo").innerText = "APRESENTANDO: NENHUMA FAIXA NO AR";
 
             const mainPlayer = document.getElementById('radio-player-main');
             mainPlayer.onended = () => {
