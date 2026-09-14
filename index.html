@@ -19,9 +19,9 @@
             font-weight: normal;
         }
 
-        /* Título Principal maior, sem negrito */
+        /* Título Principal ajustado para um tamanho menor, sem negrito */
         .site-title {
-            font-size: 38px;
+            font-size: 28px;
             font-weight: normal;
             letter-spacing: 2px;
             margin: 0 0 5px 0;
@@ -169,12 +169,44 @@
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
-        async function parseCSV(url) {
+        async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
                 const lines = text.split('\n');
-                const result = [];
+                let result = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (matches && matches.length >= 4) {
+                        const title = matches[0].replace(/^"|"$/g, '');
+                        const fileUrl = matches[1].replace(/^"|"$/g, '');
+                        const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
+                        const sequence = parseInt(matches[3].replace(/^"|"$/g, ''), 10) || 999;
+
+                        if (status === 'active') {
+                            result.push({ title, url: fileUrl, sequence });
+                        }
+                    }
+                }
+
+                // Ordena a playlist automaticamente com base na coluna sequence
+                result.sort((a, b) => a.sequence - b.sequence);
+                return result;
+            } catch (error) {
+                console.error("Erro ao carregar playlist CSV:", error);
+                return [];
+            }
+        }
+
+        async function parseAnnouncementsCSV(url) {
+            try {
+                const response = await fetch(url + "?t=" + new Date().getTime());
+                const text = await response.text();
+                const lines = text.split('\n');
+                let result = [];
                 
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
@@ -191,14 +223,14 @@
                 }
                 return result;
             } catch (error) {
-                console.error("Erro ao carregar CSV:", error);
+                console.error("Erro ao carregar vinhetas CSV:", error);
                 return [];
             }
         }
 
         async function initRadioData() {
-            playlist = await parseCSV(PLAYLIST_URL);
-            announcements = await parseCSV(ANNOUNCEMENTS_URL);
+            playlist = await parsePlaylistCSV(PLAYLIST_URL);
+            announcements = await parseAnnouncementsCSV(ANNOUNCEMENTS_URL);
         }
 
         function updateMediaSession(title, isVinheta = false) {
@@ -209,7 +241,6 @@
                     album: 'Rádio Gospel Lab'
                 });
 
-                // Configura ações da barra de notificação do Android
                 navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) toggleRadio(); });
                 navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) toggleRadio(); });
                 navigator.mediaSession.setActionHandler('previoustrack', () => { playNextTrack(); });
@@ -246,16 +277,8 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                // Força o desbloqueio de áudio em segundo plano no mobile
-                mainPlayer.play().then(() => {
-                    playNextTrack();
-                    scheduleNextAnnouncement();
-                }).catch(e => {
-                    console.error("Erro ao iniciar áudio:", e);
-                    isPlaying = false;
-                    iconEl.innerHTML = "&#9654;";
-                    dotEl.style.backgroundColor = "#cccccc";
-                });
+                playNextTrack();
+                scheduleNextAnnouncement();
             }
         };
 
@@ -407,6 +430,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             carregarAvisos();
             carregarTextoSobre();
+            initRadioData();
 
             const mainPlayer = document.getElementById('radio-player-main');
             mainPlayer.onended = () => {
