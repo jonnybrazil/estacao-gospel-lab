@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospel Labb</title>
-    <!-- Importando Amatic SC para os títulos e Special Elite para o corpo -->
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
+    <title>Rádio Gospel Lab</title>
+    <!-- Importando Amatic SC para títulos e Courier Prime para o corpo (limpa e legível) -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <style>
         body {
-            font-family: 'Special Elite', cursive;
+            font-family: 'Courier Prime', monospace;
             background-color: #ffffff;
             color: #222222;
             max-width: 650px;
@@ -26,16 +26,17 @@
             font-size: 64px;
             font-weight: 700;
             letter-spacing: 2px;
-            margin: 0 0 0 0;
+            margin: 0;
             color: #111;
             line-height: 1;
         }
 
-        /* Subtítulo em 13px */
+        /* Subtítulo ajustado para a fonte do corpo com espaçamento elegante */
         .site-subtitle {
-            font-size: 13px;
-            letter-spacing: 1px;
-            margin: 10px 0 35px 0;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            margin: 12px 0 35px 0;
             color: #555;
             text-transform: uppercase;
         }
@@ -56,13 +57,14 @@
         .radio-ticker-box {
             background: transparent;
             padding: 10px 0;
-            font-size: 14px;
+            font-size: 13px;
             text-align: left;
             min-height: 30px;
             display: flex;
             align-items: center;
             transition: opacity 0.5s ease-in-out;
             opacity: 1;
+            font-family: 'Courier Prime', monospace;
         }
         .radio-ticker-box.fade-out {
             opacity: 0;
@@ -78,8 +80,9 @@
         .texto-expansivel-box {
             background: transparent;
             text-align: left;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.6;
+            font-family: 'Courier Prime', monospace;
         }
         .texto-expansivel-conteudo {
             overflow: hidden;
@@ -88,11 +91,13 @@
         }
         .texto-expansivel-botao {
             margin-top: 12px;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
             opacity: 0.7;
             display: inline-block;
             letter-spacing: 1px;
+            font-family: 'Courier Prime', monospace;
+            text-transform: uppercase;
         }
         .texto-expansivel-botao:hover {
             opacity: 1;
@@ -105,43 +110,44 @@
         }
 
         footer {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
             margin-top: 20px;
             line-height: 1.5;
+            font-family: 'Courier Prime', monospace;
         }
     </style>
 </head>
 <body>
 
     <h1 class="site-title">Rádio Gospel Lab</h1>
-    <div class="site-subtitle">APRESENTANDO: IGREJA BATISTA LUZ</div>
+    <div class="site-subtitle">Apresentando: Igreja Batista Luz</div>
 
-    <div class="section-title">PROGRAMAÇÃO</div>
+    <div class="section-title">Programação</div>
     <div class="radio-player-container">
         <div style="margin-bottom: 12px;">
-            <div style="font-size: 11px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                <span id="radio-dot" style="height: 8px; width: 8px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
-                <span style="letter-spacing: 0.5px;">AO VIVO</span>
+            <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
+                <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
+                <span>Ao Vivo</span>
             </div>
             <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 16px; margin-right: 10px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-size: 14px; letter-spacing: 0.5px;">INICIAR</span>
+                <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
+                <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
             </div>
         </div>
     </div>
 
     <audio id="native-audio" preload="auto"></audio>
 
-    <div class="section-title">MENSAGEM DO DIA</div>
+    <div class="section-title">Mensagem do Dia</div>
     <div class="texto-expansivel-box">
         <div id="conteudo-estatico" class="texto-expansivel-conteudo">
             <p style="margin: 0 0 10px 0;">Carregando informações...</p>
         </div>
-        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">VER MAIS</span>
+        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
     </div>
 
-    <div class="section-title">AVISOS</div>
+    <div class="section-title">Avisos</div>
     <div id="radio-mensagens-container" class="radio-ticker-box">
         <span id="radio-mensagem-texto">Carregando avisos...</span>
     </div>
@@ -257,10 +263,10 @@
             const dotEl = document.getElementById('radio-dot');
 
             if (playlist.length === 0) {
-                statusEl.innerText = "CARREGANDO...";
+                statusEl.innerText = "Carregando...";
                 await initRadioData();
                 if (playlist.length === 0) {
-                    statusEl.innerText = "ERRO NA PLAYLIST";
+                    statusEl.innerText = "Erro na playlist";
                     return;
                 }
             }
@@ -270,7 +276,7 @@
                 audioElement.pause();
                 isPlaying = false;
                 clearTimeout(announcementTimer);
-                statusEl.innerText = "PAUSADO";
+                statusEl.innerText = "Pausado";
                 iconEl.innerHTML = "&#9654;";
                 dotEl.style.backgroundColor = "#cccccc";
             } else {
@@ -317,7 +323,7 @@
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
             const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = "[VINHETA] " + ann.title;
+            statusEl.innerText = "[Vinheta] " + ann.title;
             updateMediaSession(ann.title, true);
 
             audioElement.src = ann.url;
@@ -385,10 +391,10 @@
             const botao = document.getElementById('botao-estatico');
             if (conteudo.style.maxHeight === '60px') {
                 conteudo.style.maxHeight = '2000px';
-                botao.innerText = 'VER MENOS';
+                botao.innerText = 'Ver menos';
             } else {
                 conteudo.style.maxHeight = '60px';
-                botao.innerText = 'VER MAIS';
+                botao.innerText = 'Ver mais';
             }
         };
 
