@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rádio Gospel Lab</title>
-    <!-- Importando Amatic SC para títulos e Courier Prime para o corpo (limpa e legível) -->
+    <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <style>
@@ -20,10 +20,10 @@
             font-weight: normal;
         }
 
-        /* Título Principal com Amatic SC em destaque */
+        /* Título Principal com Amatic SC (levemente reduzido) */
         .site-title {
             font-family: 'Amatic SC', cursive;
-            font-size: 64px;
+            font-size: 60px;
             font-weight: 700;
             letter-spacing: 2px;
             margin: 0;
@@ -31,7 +31,7 @@
             line-height: 1;
         }
 
-        /* Subtítulo ajustado para a fonte do corpo com espaçamento elegante */
+        /* Subtítulo ajustado */
         .site-subtitle {
             font-family: 'Courier Prime', monospace;
             font-size: 11px;
@@ -109,13 +109,10 @@
             margin: 40px 0 20px 0;
         }
 
-        footer {
-            font-size: 10px;
-            color: #666;
-            margin-top: 20px;
-            line-height: 1.5;
-            font-family: 'Courier Prime', monospace;
-        }
+        <footer>
+            Copyright © 2026 Rádio Gospel Lab<br>
+            Hospedado no GitHub Pages
+        </footer>
     </style>
 </head>
 <body>
@@ -160,96 +157,83 @@
 
     <script>
         const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
-        const PLAYLIST_URL = BASE_URL + 'playlist.csv';
-        const ANNOUNCEMENTS_URL = BASE_URL + 'announcements.csv';
+        const PLAYLIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUXETPMFcoxISUycT-m21BqRoE9b6orSAzN6LJc8eIHxaLosmanDDX_gx8eaGlornIBAmPnCfUH8UY/pub?gid=0&single=true&output=csv';
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
         const CACHE_NAME = 'gospel-lab-audio-v1';
 
         let playlist = [];
-        let announcements = [];
         let currentTrackIndex = 0;
-        let announcementIndex = 0;
         let isPlaying = false;
-        let announcementTimer = null;
         let isPausedByUser = false;
 
-        const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
         const audioElement = document.getElementById('native-audio');
 
-        async function parsePlaylistCSV(url) {
+        async function loadPlaylistFromGoogleSheets() {
             try {
-                const response = await fetch(url + "?t=" + new Date().getTime());
-                const text = await response.text();
-                const lines = text.split('\n');
-                let result = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    if (matches && matches.length >= 4) {
-                        const title = matches[0].replace(/^"|"$/g, '');
-                        const fileUrl = matches[1].replace(/^"|"$/g, '');
-                        const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
-                        const sequence = parseInt(matches[3].replace(/^"|"$/g, ''), 10) || 999;
-                        if (status === 'active') {
-                            result.push({ title, url: fileUrl, sequence });
-                        }
-                    }
-                }
-                result.sort((a, b) => a.sequence - b.sequence);
-                return result;
-            } catch (error) {
-                return [];
-            }
-        }
+                const response = await fetch(PLAYLIST_CSV_URL + "&t=" + new Date().getTime());
+                const csvText = await response.text();
+                
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) return [];
 
-        async function parseAnnouncementsCSV(url) {
-            try {
-                const response = await fetch(url + "?t=" + new Date().getTime());
-                const text = await response.text();
-                const lines = text.split('\n');
-                let result = [];
+                // Lê os cabeçalhos da primeira linha (esperado: ordem, titulo, link, play)
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                
+                let list = [];
+
                 for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    if (matches && matches.length >= 3) {
-                        const title = matches[0].replace(/^"|"$/g, '');
-                        const fileUrl = matches[1].replace(/^"|"$/g, '');
-                        const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
-                        if (status === 'active') {
-                            result.push({ title, url: fileUrl });
-                        }
+                    // Tratamento simples separado por vírgula
+                    const data = lines[i].split(',').map(val => val.trim().replace(/^"|"$/g, ''));
+                    const item = {};
+                    
+                    headers.forEach((header, index) => {
+                        item[header] = data[index] || '';
+                    });
+
+                    // Verifica se a coluna 'play' está ativa (SIM, TRUE ou 1)
+                    const playStatus = item['play'] ? item['play'].toUpperCase() : '';
+                    const shouldPlay = playStatus === 'SIM' || playStatus === 'TRUE' || playStatus === '1';
+
+                    if (shouldPlay && item['ordem'] && item['link']) {
+                        list.push({
+                            ordem: parseInt(item['ordem'], 10) || 999,
+                            titulo: item['titulo'] || item['título'] || 'Sem título',
+                            link: item['link']
+                        });
                     }
                 }
-                return result;
+
+                // Ordena estritamente pelo número da coluna 'ordem'
+                list.sort((a, b) => a.ordem - b.ordem);
+                return list;
+
             } catch (error) {
+                console.error("Erro ao carregar playlist da planilha:", error);
                 return [];
             }
         }
 
         async function initRadioData() {
-            playlist = await parsePlaylistCSV(PLAYLIST_URL);
-            announcements = await parseAnnouncementsCSV(ANNOUNCEMENTS_URL);
+            playlist = await loadPlaylistFromGoogleSheets();
             
-            if ('caches' in window) {
-                const cache = await caches.open(CACHE_NAME);
-                for (let track of playlist) {
-                    try { cache.add(track.url); } catch(e){}
-                }
-                for (let ann of announcements) {
-                    try { cache.add(ann.url); } catch(e){}
-                }
+            // Pré-carregamento leve no Cache API se suportado
+            if ('caches' in window && playlist.length > 0) {
+                try {
+                    const cache = await caches.open(CACHE_NAME);
+                    for (let track of playlist) {
+                        try { cache.add(track.link); } catch(e){}
+                    }
+                } catch(e){}
             }
         }
 
-        function updateMediaSession(title, isVinheta = false) {
+        function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: title,
-                    artist: isVinheta ? 'Rádio - Vinheta' : 'Rádio Ao Vivo',
-                    album: 'Rádio Gospel Lab'
+                    artist: 'Rádio Gospel Lab',
+                    album: 'Programação Sequencial'
                 });
                 navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) toggleRadio(); });
                 navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) toggleRadio(); });
@@ -263,10 +247,10 @@
             const dotEl = document.getElementById('radio-dot');
 
             if (playlist.length === 0) {
-                statusEl.innerText = "Carregando...";
+                statusEl.innerText = "Carregando grade...";
                 await initRadioData();
                 if (playlist.length === 0) {
-                    statusEl.innerText = "Erro na playlist";
+                    statusEl.innerText = "Playlist vazia";
                     return;
                 }
             }
@@ -275,7 +259,6 @@
                 isPausedByUser = true;
                 audioElement.pause();
                 isPlaying = false;
-                clearTimeout(announcementTimer);
                 statusEl.innerText = "Pausado";
                 iconEl.innerHTML = "&#9654;";
                 dotEl.style.backgroundColor = "#cccccc";
@@ -286,10 +269,10 @@
                 dotEl.style.backgroundColor = "#2ecc71";
                 
                 playNextTrack();
-                scheduleNextAnnouncement();
             }
         };
 
+        // Quando o áudio atual termina, avança de forma linear para o próximo item da lista
         audioElement.addEventListener('ended', () => {
             if (isPlaying && !isPausedByUser) {
                 playNextTrack();
@@ -299,56 +282,21 @@
         function playNextTrack() {
             if (!isPlaying || playlist.length === 0) return;
 
+            // Faz o loop infinito da playlist inteira ordenada
+            currentTrackIndex = currentTrackIndex % playlist.length;
             const track = playlist[currentTrackIndex];
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            currentTrackIndex++;
 
             const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title;
-            updateMediaSession(track.title, false);
+            statusEl.innerText = track.titulo;
+            updateMediaSession(track.titulo);
 
-            audioElement.src = track.url;
+            audioElement.src = track.link;
             audioElement.play().catch(err => {
-                console.error("Erro ao tocar:", err);
+                console.error("Erro ao reproduzir faixa:", err);
+                // Tenta pular para a próxima se houver falha de rede/arquivo
                 setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
             });
-        }
-
-        function playAnnouncement() {
-            if (!isPlaying || announcements.length === 0) {
-                scheduleNextAnnouncement();
-                return;
-            }
-
-            const ann = announcements[announcementIndex];
-            // Avança o índice da vinheta para a próxima, mas NÃO mexe no currentTrackIndex da música!
-            announcementIndex = (announcementIndex + 1) % announcements.length;
-
-            const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = "[Vinheta] " + ann.title;
-            updateMediaSession(ann.title, true);
-
-            // Salva o tempo atual da música principal caso queira retomar, ou apenas pausa
-            audioElement.src = ann.url;
-            audioElement.play().catch(err => {
-                console.error("Erro na vinheta:", err);
-                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
-            });
-
-            // QUANDO A VINHETA ACABA:
-            audioElement.onended = () => {
-                if (isPlaying && !isPausedByUser) {
-                    // Aqui decidimos: ou toca a próxima música, ou segue o fluxo normal
-                    playNextTrack();
-                }
-            };
-
-            scheduleNextAnnouncement();
-        }
-
-        function scheduleNextAnnouncement() {
-            clearTimeout(announcementTimer);
-            if (!isPlaying) return;
-            announcementTimer = setTimeout(playAnnouncement, ANNOUNCEMENT_INTERVAL_MS);
         }
 
         async function carregarAvisos() {
