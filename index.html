@@ -177,7 +177,6 @@
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
-                // Normaliza as quebras de linha para evitar problemas de compatibilidade (Windows/Linux)
                 const lines = text.replace(/\r\n/g, '\n').split('\n');
                 
                 let sequenceString = "";
@@ -189,22 +188,20 @@
                     
                     const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
-                    // Procura inteligentemente pela linha que contém a sequência (números separados por vírgula na 4ª coluna ou contendo múltiplos números)
-                    if (cols.length >= 4 && cols[3] && cols[3].includes(',')) {
-                        sequenceString = cols[3];
-                    } else if (!sequenceString && cols.length === 1 && cols[0].includes(',')) {
-                        sequenceString = cols[0];
+                    // Procura qualquer linha que tenha números e vírgulas (a nossa sequência mestre)
+                    for (let col of cols) {
+                        if (col.includes(',') && /\d/.test(col) && !sequenceString) {
+                            sequenceString = col;
+                        }
                     }
 
-                    // Lê o catálogo de músicas (ignora o cabeçalho "posição" ou linhas sem número válido na 1ª coluna)
-                    if (cols.length >= 3) {
-                        const pos = cols[0];
-                        const title = cols[1];
-                        const fileUrl = cols[2];
-                        
-                        if (pos && !isNaN(pos)) {
-                            catalog[pos] = { title: title || "", url: fileUrl };
-                        }
+                    // Lê o catálogo de músicas (verifica se a primeira coluna é um número válido)
+                    const pos = cols[0];
+                    const title = cols[1];
+                    const fileUrl = cols[2];
+                    
+                    if (pos && !isNaN(pos) && fileUrl) {
+                        catalog[pos] = { title: title || "", url: fileUrl };
                     }
                 }
 
@@ -229,17 +226,6 @@
                 return [];
             }
         }
-        async function initRadioData() {
-            playlist = await parsePlaylistCSV(PLAYLIST_URL);
-            
-            if ('caches' in window) {
-                const cache = await caches.open(CACHE_NAME);
-                for (let track of playlist) {
-                    try { cache.add(track.url); } catch(e){}
-                }
-            }
-        }
-
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
