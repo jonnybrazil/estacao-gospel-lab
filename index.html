@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádioo Gospel Lab</title>
-    <!-- Importando as fontes Special Elite e Satisfy do Google Fonts -->
+    <title>Rádio Gospel Lab</title>
     <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <style>
@@ -20,7 +19,6 @@
             font-weight: normal;
         }
 
-        /* Título Principal com a fonte Satisfy */
         .site-title {
             font-family: 'Satisfy', cursive;
             font-size: 42px;
@@ -30,7 +28,6 @@
             color: #111;
         }
 
-        /* Subtítulo em 13px */
         .site-subtitle {
             font-size: 13px;
             letter-spacing: 1px;
@@ -48,7 +45,6 @@
             padding-bottom: 5px;
         }
 
-        /* Estilo do Ticker de Avisos */
         .radio-ticker-box {
             background: transparent;
             padding: 10px 0;
@@ -64,7 +60,6 @@
             opacity: 0;
         }
 
-        /* Estilo do Player */
         .radio-player-container {
             background-color: #ffffff;
             text-align: left;
@@ -72,7 +67,6 @@
             box-sizing: border-box;
         }
 
-        /* Estilo da Caixa Sobre */
         .texto-expansivel-box {
             background: transparent;
             text-align: left;
@@ -112,11 +106,9 @@
 </head>
 <body>
 
-    <!-- Topo: Título com Satisfy e Subtítulo -->
     <h1 class="site-title">Rádio Gospel Lab</h1>
     <div class="site-subtitle">APRESENTANDO: IGREJA BATISTA LUZ</div>
 
-    <!-- Seção: Programação (Player) -->
     <div class="section-title">PROGRAMAÇÃO</div>
     <div class="radio-player-container">
         <div style="margin-bottom: 12px;">
@@ -131,7 +123,9 @@
         </div>
     </div>
 
-    <!-- Seção: Mensagem do Dia -->
+    <!-- Elemento de áudio nativo invisível germanagedo pelo Script -->
+    <audio id="native-audio" preload="auto"></audio>
+
     <div class="section-title">MENSAGEM DO DIA</div>
     <div class="texto-expansivel-box">
         <div id="conteudo-estatico" class="texto-expansivel-conteudo">
@@ -140,13 +134,11 @@
         <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">VER MAIS</span>
     </div>
 
-    <!-- Seção: Avisos -->
     <div class="section-title">AVISOS</div>
     <div id="radio-mensagens-container" class="radio-ticker-box">
         <span id="radio-mensagem-texto">Carregando avisos...</span>
     </div>
 
-    <!-- Rodapé -->
     <div class="divider"></div>
     <footer>
         Copyright © 2026 Rádio Gospel Lab<br>
@@ -159,6 +151,7 @@
         const ANNOUNCEMENTS_URL = BASE_URL + 'announcements.csv';
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
+        const CACHE_NAME = 'gospel-lab-audio-v1';
 
         let playlist = [];
         let announcements = [];
@@ -166,15 +159,10 @@
         let announcementIndex = 0;
         let isPlaying = false;
         let announcementTimer = null;
-        
-        let audioCtx = null;
-        let currentSource = null;
-        let masterGain = null;
-        let currentMusicTitle = "";
         let isPausedByUser = false;
-        let isBuildingPipeline = false;
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
+        const audioElement = document.getElementById('native-audio');
 
         async function parsePlaylistCSV(url) {
             try {
@@ -182,7 +170,6 @@
                 const text = await response.text();
                 const lines = text.split('\n');
                 let result = [];
-                
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
@@ -192,7 +179,6 @@
                         const fileUrl = matches[1].replace(/^"|"$/g, '');
                         const status = matches[2].replace(/^"|"$/g, '').toLowerCase();
                         const sequence = parseInt(matches[3].replace(/^"|"$/g, ''), 10) || 999;
-
                         if (status === 'active') {
                             result.push({ title, url: fileUrl, sequence });
                         }
@@ -212,7 +198,6 @@
                 const text = await response.text();
                 const lines = text.split('\n');
                 let result = [];
-                
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
@@ -228,7 +213,6 @@
                 }
                 return result;
             } catch (error) {
-                console.error("Erro ao carregar vinhetas CSV:", error);
                 return [];
             }
         }
@@ -236,16 +220,16 @@
         async function initRadioData() {
             playlist = await parsePlaylistCSV(PLAYLIST_URL);
             announcements = await parseAnnouncementsCSV(ANNOUNCEMENTS_URL);
-        }
-
-        function initAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                masterGain = audioCtx.createGain();
-                masterGain.connect(audioCtx.destination);
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            
+            // Pré-carrega todos os áudios no Cache Storage do navegador para o Service Worker usar
+            if ('caches' in window) {
+                const cache = await caches.open(CACHE_NAME);
+                for (let track of playlist) {
+                    try { cache.add(track.url); } catch(e){}
+                }
+                for (let ann of announcements) {
+                    try { cache.add(ann.url); } catch(e){}
+                }
             }
         }
 
@@ -256,11 +240,9 @@
                     artist: isVinheta ? 'Rádio - Vinheta' : 'Rádio Ao Vivo',
                     album: 'Rádio Gospel Lab'
                 });
-
                 navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) toggleRadio(); });
                 navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) toggleRadio(); });
-                navigator.mediaSession.setActionHandler('previoustrack', () => { playNextPipelineSegment(); });
-                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextPipelineSegment(); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextTrack(); });
             }
         }
 
@@ -268,8 +250,6 @@
             const statusEl = document.getElementById('radio-status');
             const iconEl = document.getElementById('radio-icon');
             const dotEl = document.getElementById('radio-dot');
-
-            initAudioContext();
 
             if (playlist.length === 0) {
                 statusEl.innerText = "CARREGANDO...";
@@ -282,12 +262,10 @@
 
             if (isPlaying) {
                 isPausedByUser = true;
-                if (currentSource) {
-                    try { currentSource.stop(); } catch(e){}
-                }
+                audioElement.pause();
                 isPlaying = false;
                 clearTimeout(announcementTimer);
-                statusEl.innerText = currentMusicTitle || "PAUSADO";
+                statusEl.innerText = "PAUSADO";
                 iconEl.innerHTML = "&#9654;";
                 dotEl.style.backgroundColor = "#cccccc";
             } else {
@@ -296,68 +274,35 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                playNextPipelineSegment();
+                playNextTrack();
                 scheduleNextAnnouncement();
             }
         };
 
-        async function playNextPipelineSegment() {
-            if (!isPlaying || playlist.length === 0 || isBuildingPipeline) return;
-            isBuildingPipeline = true;
+        function playNextTrack() {
+            if (!isPlaying || playlist.length === 0) return;
 
-            const statusEl = document.getElementById('radio-status');
             const track = playlist[currentTrackIndex];
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
-            currentMusicTitle = track.title;
+            const statusEl = document.getElementById('radio-status');
             statusEl.innerText = track.title;
             updateMediaSession(track.title, false);
 
-            try {
-                // Baixa e decodifica a faixa atual
-                const response = await fetch(track.url);
-                const arrayBuffer = await response.arrayBuffer();
-                const decodedAudio = await audioCtx.decodeAudioData(arrayBuffer);
+            audioElement.src = track.url;
+            audioElement.play().catch(err => console.error("Erro ao tocar:", err));
 
-                if (!isPlaying) {
-                    isBuildingPipeline = false;
-                    return;
+            audioElement.onended = () => {
+                if (isPlaying && !isPausedByUser) {
+                    playNextTrack();
                 }
-
-                if (currentSource) {
-                    try { currentSource.stop(); } catch(e){}
-                }
-
-                currentSource = audioCtx.createBufferSource();
-                currentSource.buffer = decodedAudio;
-                currentSource.connect(masterGain);
-                
-                currentSource.start(0);
-                isBuildingPipeline = false;
-
-                currentSource.onended = () => {
-                    if (isPlaying && !isPausedByUser) {
-                        playNextPipelineSegment();
-                    }
-                };
-
-            } catch (err) {
-                console.error("Erro no pipeline de áudio:", err);
-                isBuildingPipeline = false;
-                if (isPlaying) {
-                    setTimeout(() => { playNextPipelineSegment(); }, 1000);
-                }
-            }
+            };
         }
 
         function playAnnouncement() {
             if (!isPlaying || announcements.length === 0) {
                 scheduleNextAnnouncement();
                 return;
-            }
-
-            if (currentSource) {
-                try { currentSource.stop(); } catch(e){}
             }
 
             const ann = announcements[announcementIndex];
@@ -367,26 +312,14 @@
             statusEl.innerText = "[VINHETA] " + ann.title;
             updateMediaSession(ann.title, true);
 
-            fetch(ann.url)
-                .then(res => res.arrayBuffer())
-                .then(buf => audioCtx.decodeAudioData(buf))
-                .then(decoded => {
-                    if (!isPlaying) return;
-                    currentSource = audioCtx.createBufferSource();
-                    currentSource.buffer = decoded;
-                    currentSource.connect(masterGain);
-                    currentSource.start(0);
+            audioElement.src = ann.url;
+            audioElement.play().catch(err => console.error("Erro na vinheta:", err));
 
-                    currentSource.onended = () => {
-                        if (isPlaying && !isPausedByUser) {
-                            playNextPipelineSegment();
-                        }
-                    };
-                })
-                .catch(err => {
-                    console.error("Erro na vinheta:", err);
-                    if (isPlaying) playNextPipelineSegment();
-                });
+            audioElement.onended = () => {
+                if (isPlaying && !isPausedByUser) {
+                    playNextTrack();
+                }
+            };
 
             scheduleNextAnnouncement();
         }
@@ -439,9 +372,7 @@
                     if (linha) htmlGerado += `<p style="margin: 0 0 10px 0;">${linha}</p>`;
                 }
                 if (htmlGerado) document.getElementById("conteudo-estatico").innerHTML = htmlGerado;
-            } catch (e) {
-                console.error("Erro ao carregar sobre.txt", e);
-            }
+            } catch (e) {}
         }
 
         window.toggleTexto = function() {
@@ -456,9 +387,14 @@
             }
         };
 
+        // Registro do Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    console.log('Service Worker registrado com sucesso:', reg.scope);
+                }).catch((err) => {
+                    console.error('Falha ao registrar o Service Worker:', err);
+                });
             });
         }
 
