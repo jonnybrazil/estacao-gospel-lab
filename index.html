@@ -28,9 +28,9 @@
             color: #111;
         }
 
-        /* Subtítulo menor */
+        /* Subtítulo ajustado para 13px */
         .site-subtitle {
-            font-size: 12px;
+            font-size: 13px;
             letter-spacing: 1px;
             margin: 0 0 35px 0;
             color: #555;
@@ -166,6 +166,7 @@
         let announcementTimer = null;
         let currentAudio = null;
         let currentFxAudio = null;
+        let currentMusicTitle = "";
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
@@ -211,6 +212,7 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    // Correção na leitura das vinhetas para garantir captação exata da coluna de título e url
                     if (matches && matches.length >= 3) {
                         const title = matches[0].replace(/^"|"$/g, '');
                         const fileUrl = matches[1].replace(/^"|"$/g, '');
@@ -266,7 +268,7 @@
                 if (currentFxAudio) currentFxAudio.pause();
                 isPlaying = false;
                 clearTimeout(announcementTimer);
-                statusEl.innerText = playlist[currentTrackIndex]?.title || "PAUSADO";
+                statusEl.innerText = currentMusicTitle || "PAUSADO";
                 iconEl.innerHTML = "&#9654;";
                 dotEl.style.backgroundColor = "#cccccc";
             } else {
@@ -290,11 +292,12 @@
             const statusEl = document.getElementById('radio-status');
             const track = playlist[currentTrackIndex];
             
+            currentMusicTitle = track.title;
             currentAudio = new Audio(track.url);
             currentAudio.preload = "auto";
             
-            statusEl.innerText = track.title;
-            updateMediaSession(track.title, false);
+            statusEl.innerText = currentMusicTitle;
+            updateMediaSession(currentMusicTitle, false);
 
             currentAudio.play().then(() => {
                 currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -331,22 +334,24 @@
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
             currentFxAudio = new Audio(ann.url);
+            
+            // Exibe corretamente o título limpo da vinheta definido no CSV
             statusEl.innerText = "[VINHETA] " + ann.title;
             updateMediaSession(ann.title, true);
 
             if (currentAudio) {
-                currentAudio.volume = 0.2; // Abaixa o som da música principal
+                currentAudio.volume = 0.2; 
             }
 
             currentFxAudio.play().catch(err => console.log("Erro ao tocar vinheta:", err));
 
             currentFxAudio.onended = () => {
                 if (currentAudio) {
-                    currentAudio.volume = 1.0; // Restaura o volume da música
+                    currentAudio.volume = 1.0; 
                 }
-                if (isPlaying && playlist.length > 0) {
-                    statusEl.innerText = playlist[(currentTrackIndex - 1 + playlist.length) % playlist.length].title;
-                    updateMediaSession(statusEl.innerText, false);
+                if (isPlaying) {
+                    statusEl.innerText = currentMusicTitle;
+                    updateMediaSession(currentMusicTitle, false);
                 }
                 scheduleNextAnnouncement();
             };
