@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospel Lab</title>
+    <title>Rádio Gospell Lab</title>
     <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -188,14 +188,12 @@
                     
                     const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
-                    // Procura qualquer linha que tenha números e vírgulas (a nossa sequência mestre)
                     for (let col of cols) {
                         if (col.includes(',') && /\d/.test(col) && !sequenceString) {
                             sequenceString = col;
                         }
                     }
 
-                    // Lê o catálogo de músicas (verifica se a primeira coluna é um número válido)
                     const pos = cols[0];
                     const title = cols[1];
                     const fileUrl = cols[2];
@@ -216,16 +214,24 @@
                     }
                 }
 
-                console.log("Sequência encontrada:", sequenceString);
-                console.log("Catálogo carregado:", catalog);
-                console.log("Playlist final montada:", result);
-
                 return result;
             } catch (error) {
                 console.error("Erro ao processar CSV:", error);
                 return [];
             }
         }
+
+        async function initRadioData() {
+            playlist = await parsePlaylistCSV(PLAYLIST_URL);
+            
+            if ('caches' in window) {
+                const cache = await caches.open(CACHE_NAME);
+                for (let track of playlist) {
+                    try { cache.add(track.url); } catch(e){}
+                }
+            }
+        }
+
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -286,7 +292,7 @@
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
             const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title || ""; // Se for vazio (como a vinheta), limpa o texto na tela
+            statusEl.innerText = track.title || ""; 
             updateMediaSession(track.title);
 
             audioElement.src = track.url;
