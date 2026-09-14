@@ -169,21 +169,28 @@
 
         const audioElement = document.getElementById('native-audio');
 
-        async function loadPlaylistFromGoogleSheets() {
+       async function loadPlaylistFromGoogleSheets() {
             try {
+                const statusEl = document.getElementById('radio-status');
+                statusEl.innerText = "Baixando CSV...";
+
                 const response = await fetch(PLAYLIST_CSV_URL + "&t=" + new Date().getTime());
                 const csvText = await response.text();
                 
-                const lines = csvText.split('\n').filter(line => line.trim() !== '');
-                if (lines.length === 0) return [];
+                console.log("CSV Bruto recebido:", csvText); // Vai aparecer no F12 se baixar direito
 
-                // Lê os cabeçalhos da primeira linha (esperado: ordem, titulo, link, play)
+                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) {
+                    statusEl.innerText = "CSV vazio!";
+                    return [];
+                }
+
                 const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-                
+                console.log("Cabeçalhos detectados:", headers);
+
                 let list = [];
 
                 for (let i = 1; i < lines.length; i++) {
-                    // Tratamento simples separado por vírgula
                     const data = lines[i].split(',').map(val => val.trim().replace(/^"|"$/g, ''));
                     const item = {};
                     
@@ -191,7 +198,6 @@
                         item[header] = data[index] || '';
                     });
 
-                    // Verifica se a coluna 'play' está ativa (SIM, TRUE ou 1)
                     const playStatus = item['play'] ? item['play'].toUpperCase() : '';
                     const shouldPlay = playStatus === 'SIM' || playStatus === 'TRUE' || playStatus === '1';
 
@@ -203,6 +209,17 @@
                         });
                     }
                 }
+
+                list.sort((a, b) => a.ordem - b.ordem);
+                console.log("Lista final processada:", list);
+                return list;
+
+            } catch (error) {
+                console.error("Erro crítico no loadPlaylist:", error);
+                document.getElementById('radio-status').innerText = "Erro ao ler CSV";
+                return [];
+            }
+        }
 
                 // Ordena estritamente pelo número da coluna 'ordem'
                 list.sort((a, b) => a.ordem - b.ordem);
