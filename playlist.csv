@@ -1,9 +1,9 @@
-title,url,status,sequence
-"Árvore Plantada (Salmos 1)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Como%20%C3%81rvore.mp3","active",5
-"Aquele Dia (Mateus 16:3)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Aquele%20Dia.mp3","active",2
-"Abrigo na Rocha (Salmos 2)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Abrigo%20na%20Rocha_Remix.mp3","active",8
-"Tua Paz Proclamarei (Salmos 32)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Salmo%2032_2.mp3","active",3
-"Maior é o Teu Amor (Efésios 3:19)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Maior%20%C3%A9%20o%20Teu%20Amor.mp3","active",6
-"Cuida de Mim (Salmos 34)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Cuida%20de%20Mim_Salmo%2034.mp3","active",7
-"-","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3","active",1
-"-","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3","active",4
+posição,título,url,sequência
+,,,"7,1,2,3,7,4,5,6"
+1,"Árvore Plantada (Salmos 1)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Como%20%C3%81rvore.mp3",
+2,"Aquele Dia (Mateus 16:3)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Aquele%20Dia.mp3",
+3,"Abrigo na Rocha (Salmos 2)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Abrigo%20na%20Rocha_Remix.mp3",
+4,"Tua Paz Proclamarei (Salmos 32)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Salmo%2032_2.mp3",
+5,"Maior é o Teu Amor (Efésios 3:19)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Maior%20%C3%A9%20o%20Teu%20Amor.mp3",
+6,"Cuida de Mim (Salmos 34)","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Cuida%20de%20Mim_Salmo%2034.mp3",
+7,"","https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3",
