@@ -28,9 +28,9 @@
             color: #111;
         }
 
-        /* Subtítulo ajustado para uma fonte menor (de 15px para 12px) */
+        /* Subtítulo menor */
         .site-subtitle {
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 1px;
             margin: 0 0 35px 0;
             color: #555;
@@ -127,8 +127,6 @@
                 <span id="radio-status" style="font-size: 14px; letter-spacing: 0.5px;">INICIAR</span>
             </div>
         </div>
-        <audio id="radio-player-main" preload="auto" playsinline></audio>
-        <audio id="radio-player-fx" preload="auto" playsinline></audio>
     </div>
 
     <!-- Seção: Mensagem do Dia -->
@@ -166,7 +164,8 @@
         let announcementIndex = 0;
         let isPlaying = false;
         let announcementTimer = null;
-        let currentMusicTitle = "";
+        let currentAudio = null;
+        let currentFxAudio = null;
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
@@ -252,8 +251,6 @@
             const statusEl = document.getElementById('radio-status');
             const iconEl = document.getElementById('radio-icon');
             const dotEl = document.getElementById('radio-dot');
-            const mainPlayer = document.getElementById('radio-player-main');
-            const fxPlayer = document.getElementById('radio-player-fx');
 
             if (playlist.length === 0) {
                 statusEl.innerText = "CARREGANDO...";
@@ -265,8 +262,8 @@
             }
 
             if (isPlaying) {
-                mainPlayer.pause();
-                fxPlayer.pause();
+                if (currentAudio) currentAudio.pause();
+                if (currentFxAudio) currentFxAudio.pause();
                 isPlaying = false;
                 clearTimeout(announcementTimer);
                 statusEl.innerText = playlist[currentTrackIndex]?.title || "PAUSADO";
@@ -277,69 +274,50 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                // Força o desbloqueio de áudio exigido pelo Chrome/Android na primeira interação
-                mainPlayer.play().then(() => {
-                    playNextTrack();
-                    scheduleNextAnnouncement();
-                }).catch(e => {
-                    console.warn("Tentativa inicial de play bloqueada, retentando...", e);
-                    playNextTrack();
-                    scheduleNextAnnouncement();
-                });
+                playNextTrack();
+                scheduleNextAnnouncement();
             }
         };
-
-        function fadeVolume(audioEl, targetVolume, duration, callback) {
-            const stepTime = 50;
-            const steps = duration / stepTime;
-            const volumeStep = (targetVolume - audioEl.volume) / steps;
-
-            const interval = setInterval(() => {
-                let newVolume = audioEl.volume + volumeStep;
-                if ((volumeStep > 0 && newVolume >= targetVolume) || (volumeStep < 0 && newVolume <= targetVolume)) {
-                    audioEl.volume = targetVolume;
-                    clearInterval(interval);
-                    if (callback) callback();
-                } else {
-                    audioEl.volume = newVolume;
-                }
-            }, stepTime);
-        }
 
         function playNextTrack() {
             if (!isPlaying || playlist.length === 0) return;
 
-            const mainPlayer = document.getElementById('radio-player-main');
-            const fxPlayer = document.getElementById('radio-player-fx');
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+
             const statusEl = document.getElementById('radio-status');
-            
             const track = playlist[currentTrackIndex];
-            mainPlayer.src = track.url;
-            mainPlayer.load(); // Garante o reset do buffer para o Android
             
-            const isFxPlaying = !fxPlayer.paused && fxPlayer.currentTime > 0 && !fxPlayer.ended;
-            mainPlayer.volume = isFxPlaying ? 0.2 : 1.0;
+            currentAudio = new Audio(track.url);
+            currentAudio.preload = "auto";
+            
+            statusEl.innerText = track.title;
+            updateMediaSession(track.title, false);
 
-            currentMusicTitle = track.title;
-            
-            if (!isFxPlaying) {
-                statusEl.innerText = currentMusicTitle;
-                updateMediaSession(currentMusicTitle, false);
-            }
+            currentAudio.play().then(() => {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            }).catch(e => {
+                console.warn("Bloqueio detectado no Android, tentando recuperar...", e);
+                setTimeout(() => {
+                    if (isPlaying && currentAudio) {
+                        currentAudio.play().catch(err => console.error("Erro fatal de reprodução:", err));
+                    }
+                }, 1500);
+            });
 
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            
-            const playPromise = mainPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => {
-                    console.warn("Recuperando segundo plano (Android)...", e);
-                    setTimeout(() => {
-                        if (isPlaying) {
-                            mainPlayer.play().catch(err => console.error("Erro definitivo no Android:", err));
-                        }
-                    }, 1000);
-                });
-            }
+            currentAudio.onended = () => {
+                if (isPlaying) {
+                    setTimeout(playNextTrack, 300);
+                }
+            };
+
+            currentAudio.onerror = () => {
+                if (isPlaying) {
+                    setTimeout(playNextTrack, 2000);
+                }
+            };
         }
 
         function playAnnouncement() {
@@ -348,28 +326,29 @@
                 return;
             }
 
-            const mainPlayer = document.getElementById('radio-player-main');
-            const fxPlayer = document.getElementById('radio-player-fx');
             const statusEl = document.getElementById('radio-status');
-
             const ann = announcements[announcementIndex];
-            fxPlayer.src = ann.url;
-            fxPlayer.load();
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
+            currentFxAudio = new Audio(ann.url);
             statusEl.innerText = "[VINHETA] " + ann.title;
             updateMediaSession(ann.title, true);
 
-            fadeVolume(mainPlayer, 0.2, 1000, () => {
-                fxPlayer.play().catch(err => console.log("Erro ao tocar vinheta:", err));
-            });
+            if (currentAudio) {
+                currentAudio.volume = 0.2; // Abaixa o som da música principal
+            }
 
-            fxPlayer.onended = () => {
-                statusEl.innerText = currentMusicTitle;
-                updateMediaSession(currentMusicTitle, false);
-                fadeVolume(mainPlayer, 1.0, 1000, () => {
-                    scheduleNextAnnouncement();
-                });
+            currentFxAudio.play().catch(err => console.log("Erro ao tocar vinheta:", err));
+
+            currentFxAudio.onended = () => {
+                if (currentAudio) {
+                    currentAudio.volume = 1.0; // Restaura o volume da música
+                }
+                if (isPlaying && playlist.length > 0) {
+                    statusEl.innerText = playlist[(currentTrackIndex - 1 + playlist.length) % playlist.length].title;
+                    updateMediaSession(statusEl.innerText, false);
+                }
+                scheduleNextAnnouncement();
             };
         }
 
@@ -442,22 +421,6 @@
             carregarAvisos();
             carregarTextoSobre();
             initRadioData();
-
-            const mainPlayer = document.getElementById('radio-player-main');
-            
-            // Tratamentos extras para reativar o fluxo caso o Android suspenda a aba
-            document.addEventListener("visibilitychange", () => {
-                if (!document.hidden && isPlaying && mainPlayer.paused) {
-                    mainPlayer.play().catch(err => console.log("Retomada após visibilitychange:", err));
-                }
-            });
-
-            mainPlayer.onended = () => {
-                if (isPlaying) setTimeout(playNextTrack, 500);
-            };
-            mainPlayer.onerror = () => {
-                if (isPlaying) setTimeout(playNextTrack, 2000);
-            };
         });
     </script>
 </body>
