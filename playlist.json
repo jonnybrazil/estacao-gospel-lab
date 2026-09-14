@@ -1,0 +1,33 @@
+{
+  "sequence": [7, 1, 2, 3, 7, 4, 5, 6],
+  "catalog": {
+    "1": {
+      "title": "Árvore Plantada (Salmos 1)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Como%20o%20C3%81rvore.mp3"
+    },
+    "2": {
+      "title": "Aquele Dia (Mateus 16:3)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Aquele%20Dia.mp3"
+    },
+    "3": {
+      "title": "Abrigo na Rocha (Salmos 2)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Abrigo%20na%20Rocha_Remix.mp3"
+    },
+    "4": {
+      "title": "Tua Paz Proclamarei (Salmos 32)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Salmo%202032_2.mp3"
+    },
+    "5": {
+      "title": "Maior é o Teu Amor (Efésios 3:19)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Maior%20%C3%A9%20o%20Teu%20Amor.mp3"
+    },
+    "6": {
+      "title": "Cuida de Mim (Salmos 34)",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Cuida%20de%20Mim_Salmo3034.mp3"
+    },
+    "7": {
+      "title": "",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3"
+    }
+  }
+}
