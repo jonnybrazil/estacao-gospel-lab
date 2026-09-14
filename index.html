@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="manifest.json">
     <title>Rádio Gospel Lab</title>
     <!-- Importando a fonte Special Elite para todo o site -->
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
     <style>
         body {
             font-family: 'Special Elite', cursive;
@@ -29,7 +29,7 @@
             color: #111;
         }
 
-        /* Subtítulo ajustado para 13px */
+        /* Subtítulo em 13px */
         .site-subtitle {
             font-size: 13px;
             letter-spacing: 1px;
@@ -111,7 +111,7 @@
 </head>
 <body>
 
-    <!-- Topo: Título e Subtítulo Estático (Sponsor) -->
+    <!-- Topo: Título e Subtítulo Estático -->
     <h1 class="site-title">RÁDIO GOSPEL LAB</h1>
     <div class="site-subtitle">APRESENTANDO: IGREJA BATISTA LUZ</div>
 
@@ -165,9 +165,12 @@
         let announcementIndex = 0;
         let isPlaying = false;
         let announcementTimer = null;
-        let currentAudio = null;
-        let currentFxAudio = null;
+        
+        let audioCtx = null;
+        let currentSource = null;
+        let gainNode = null;
         let currentMusicTitle = "";
+        let isPausedByUser = false;
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
@@ -193,7 +196,6 @@
                         }
                     }
                 }
-
                 result.sort((a, b) => a.sequence - b.sequence);
                 return result;
             } catch (error) {
@@ -213,7 +215,6 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    // Correção na leitura das vinhetas para garantir captação exata da coluna de título e url
                     if (matches && matches.length >= 3) {
                         const title = matches[0].replace(/^"|"$/g, '');
                         const fileUrl = matches[1].replace(/^"|"$/g, '');
@@ -233,6 +234,17 @@
         async function initRadioData() {
             playlist = await parsePlaylistCSV(PLAYLIST_URL);
             announcements = await parseAnnouncementsCSV(ANNOUNCEMENTS_URL);
+        }
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                gainNode = audioCtx.createGain();
+                gainNode.connect(audioCtx.destination);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
         function updateMediaSession(title, isVinheta = false) {
@@ -255,6 +267,8 @@
             const iconEl = document.getElementById('radio-icon');
             const dotEl = document.getElementById('radio-dot');
 
+            initAudioContext();
+
             if (playlist.length === 0) {
                 statusEl.innerText = "CARREGANDO...";
                 await initRadioData();
@@ -265,14 +279,17 @@
             }
 
             if (isPlaying) {
-                if (currentAudio) currentAudio.pause();
-                if (currentFxAudio) currentFxAudio.pause();
+                isPausedByUser = true;
+                if (currentSource) {
+                    try { currentSource.stop(); } catch(e){}
+                }
                 isPlaying = false;
                 clearTimeout(announcementTimer);
                 statusEl.innerText = currentMusicTitle || "PAUSADO";
                 iconEl.innerHTML = "&#9654;";
                 dotEl.style.backgroundColor = "#cccccc";
             } else {
+                isPausedByUser = false;
                 isPlaying = true;
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
@@ -282,46 +299,57 @@
             }
         };
 
+        async function playAudioBuffer(url, title, isVinheta = false, onEndedCallback) {
+            if (!isPlaying) return;
+
+            const statusEl = document.getElementById('radio-status');
+            if (!isVinheta) {
+                currentMusicTitle = title;
+            }
+            
+            statusEl.innerText = isVinheta ? ("[VINHETA] " + title) : title;
+            updateMediaSession(title, isVinheta);
+
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const decodedAudio = await audioCtx.decodeAudioData(arrayBuffer);
+
+                if (!isPlaying) return; // Se pausou durante o carregamento
+
+                if (currentSource) {
+                    try { currentSource.stop(); } catch(e){}
+                }
+
+                currentSource = audioCtx.createBufferSource();
+                currentSource.buffer = decodedAudio;
+                currentSource.connect(gainNode);
+                
+                currentSource.start(0);
+
+                currentSource.onended = () => {
+                    if (isPlaying && !isPausedByUser) {
+                        if (onEndedCallback) onEndedCallback();
+                    }
+                };
+
+            } catch (err) {
+                console.error("Erro no buffer de áudio:", err);
+                if (isPlaying) {
+                    setTimeout(() => { if (onEndedCallback) onEndedCallback(); }, 2000);
+                }
+            }
+        }
+
         function playNextTrack() {
             if (!isPlaying || playlist.length === 0) return;
 
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-
-            const statusEl = document.getElementById('radio-status');
             const track = playlist[currentTrackIndex];
-            
-            currentMusicTitle = track.title;
-            currentAudio = new Audio(track.url);
-            currentAudio.preload = "auto";
-            
-            statusEl.innerText = currentMusicTitle;
-            updateMediaSession(currentMusicTitle, false);
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
-            currentAudio.play().then(() => {
-                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-            }).catch(e => {
-                console.warn("Bloqueio detectado no Android, tentando recuperar...", e);
-                setTimeout(() => {
-                    if (isPlaying && currentAudio) {
-                        currentAudio.play().catch(err => console.error("Erro fatal de reprodução:", err));
-                    }
-                }, 1500);
+            playAudioBuffer(track.url, track.title, false, () => {
+                playNextTrack();
             });
-
-            currentAudio.onended = () => {
-                if (isPlaying) {
-                    setTimeout(playNextTrack, 300);
-                }
-            };
-
-            currentAudio.onerror = () => {
-                if (isPlaying) {
-                    setTimeout(playNextTrack, 2000);
-                }
-            };
         }
 
         function playAnnouncement() {
@@ -330,32 +358,25 @@
                 return;
             }
 
-            const statusEl = document.getElementById('radio-status');
             const ann = announcements[announcementIndex];
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
-            currentFxAudio = new Audio(ann.url);
-            
-            // Exibe corretamente o título limpo da vinheta definido no CSV
-            statusEl.innerText = "[VINHETA] " + ann.title;
-            updateMediaSession(ann.title, true);
-
-            if (currentAudio) {
-                currentAudio.volume = 0.2; 
+            // Suaviza o volume da música atual se houver ganho
+            if (gainNode) {
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             }
 
-            currentFxAudio.play().catch(err => console.log("Erro ao tocar vinheta:", err));
-
-            currentFxAudio.onended = () => {
-                if (currentAudio) {
-                    currentAudio.volume = 1.0; 
+            playAudioBuffer(ann.url, ann.title, true, () => {
+                if (gainNode) {
+                    gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
                 }
                 if (isPlaying) {
+                    const statusEl = document.getElementById('radio-status');
                     statusEl.innerText = currentMusicTitle;
                     updateMediaSession(currentMusicTitle, false);
                 }
                 scheduleNextAnnouncement();
-            };
+            });
         }
 
         function scheduleNextAnnouncement() {
@@ -423,20 +444,17 @@
             }
         };
 
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             carregarAvisos();
             carregarTextoSobre();
             initRadioData();
         });
     </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-                .catch(err => console.log('Falha ao registrar o Service Worker:', err));
-        });
-    }
-</script>
 </body>
 </html>
