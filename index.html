@@ -170,7 +170,7 @@
 
         const audioElement = document.getElementById('native-audio');
 
-        async function parsePlaylistCSV(url) {
+       async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const text = await response.text();
@@ -182,26 +182,28 @@
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
-                    const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                    if (!matches) continue;
+                    
+                    // Divide a linha por vírgula de forma simples e limpa
+                    const cols = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
 
-                    // Se for a linha de comando mestre (geralmente na linha 2, onde a posição está vazia mas tem sequência na coluna D)
-                    if (i === 1 && matches.length >= 4) {
-                        sequenceString = matches[3].replace(/^"|"$/g, '');
+                    // Se for a linha mestre (geralmente a linha 2, índice 1)
+                    // Verifica se a 4ª coluna (índice 3) tem números separados por vírgula
+                    if (cols.length >= 4 && cols[3] && cols[3].includes(',')) {
+                        sequenceString = cols[3];
                     } 
-                    // Linhas do catálogo de músicas
-                    else if (matches.length >= 3) {
-                        const pos = matches[0].replace(/^"|"$/g, '');
-                        const title = matches[1].replace(/^"|"$/g, '');
-                        const fileUrl = matches[2].replace(/^"|"$/g, '');
+                    // Linhas do catálogo (posição, título, url)
+                    else if (cols.length >= 3) {
+                        const pos = cols[0];
+                        const title = cols[1];
+                        const fileUrl = cols[2];
                         
-                        if (pos && title && fileUrl) {
-                            catalog[pos] = { title, url: fileUrl };
+                        if (pos && !isNaN(pos)) {
+                            catalog[pos] = { title: title || "", url: fileUrl };
                         }
                     }
                 }
 
-                // Se houver uma sequência definida, monta o array final cruzando os números com o catálogo
+                // Se houver uma sequência definida, monta o array final cruzando com o catálogo
                 let result = [];
                 if (sequenceString) {
                     const sequenceArray = sequenceString.split(',');
