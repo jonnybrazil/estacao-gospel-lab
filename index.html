@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospell Lab</title>
-    <!-- Importando a fonte Special Elite para todo o site -->
-    <link href="https://fonts.googleapis.com/css2?family=Satisfy&display=swap" rel="stylesheet" rel="stylesheet">
+    <title>Rádio Gosppel Lab</title>
+    <!-- Importando as fontes Special Elite e Satisfy do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <style>
         body {
@@ -20,11 +20,12 @@
             font-weight: normal;
         }
 
-        /* Título Principal */
+        /* Título Principal com a fonte Satisfy */
         .site-title {
-            font-size: 28px;
+            font-family: 'Satisfy', cursive;
+            font-size: 42px; /* Aumentado ligeiramente para valorizar o estilo caligráfico */
             font-weight: normal;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin: 0 0 5px 0;
             color: #111;
         }
@@ -111,8 +112,8 @@
 </head>
 <body>
 
-    <!-- Topo: Título e Subtítulo Estático -->
-    <h1 class="site-title">RÁDIO GOSPEL LAB</h1>
+    <!-- Topo: Título com Satisfy e Subtítulo -->
+    <h1 class="site-title">Rádio Gospel Lab</h1>
     <div class="site-subtitle">APRESENTANDO: IGREJA BATISTA LUZ</div>
 
     <!-- Seção: Programação (Player) -->
@@ -171,6 +172,7 @@
         let gainNode = null;
         let currentMusicTitle = "";
         let isPausedByUser = false;
+        let isAnnouncementPlaying = false;
 
         const ANNOUNCEMENT_INTERVAL_MS = 7 * 60 * 1000;
 
@@ -315,7 +317,7 @@
                 const arrayBuffer = await response.arrayBuffer();
                 const decodedAudio = await audioCtx.decodeAudioData(arrayBuffer);
 
-                if (!isPlaying) return; // Se pausou durante o carregamento
+                if (!isPlaying) return; 
 
                 if (currentSource) {
                     try { currentSource.stop(); } catch(e){}
@@ -336,15 +338,16 @@
             } catch (err) {
                 console.error("Erro no buffer de áudio:", err);
                 if (isPlaying) {
-                    setTimeout(() => { if (onEndedCallback) onEndedCallback(); }, 2000);
+                    setTimeout(() => { if (onEndedCallback) onEndedCallback(); }, 1000);
                 }
             }
         }
 
         function playNextTrack() {
-            if (!isPlaying || playlist.length === 0) return;
+            if (!isPlaying || playlist.length === 0 || isAnnouncementPlaying) return;
 
             const track = playlist[currentTrackIndex];
+            // Incrementa corretamente o índice para evitar repetição da mesma faixa
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
             playAudioBuffer(track.url, track.title, false, () => {
@@ -358,22 +361,21 @@
                 return;
             }
 
+            isAnnouncementPlaying = true;
+            if (currentSource) {
+                try { currentSource.stop(); } catch(e){}
+            }
+
             const ann = announcements[announcementIndex];
             announcementIndex = (announcementIndex + 1) % announcements.length;
 
-            // Suaviza o volume da música atual se houver ganho
-            if (gainNode) {
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            }
-
             playAudioBuffer(ann.url, ann.title, true, () => {
-                if (gainNode) {
-                    gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
-                }
+                isAnnouncementPlaying = false;
                 if (isPlaying) {
                     const statusEl = document.getElementById('radio-status');
                     statusEl.innerText = currentMusicTitle;
                     updateMediaSession(currentMusicTitle, false);
+                    playNextTrack(); // Retoma imediatamente a playlist sem delay
                 }
                 scheduleNextAnnouncement();
             });
