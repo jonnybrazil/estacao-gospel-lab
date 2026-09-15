@@ -1,5 +1,4 @@
 {
-  "sequence": [7, 1, 2, 3, 7, 4, 5, 6],
   "catalog": {
     "1": {
       "title": "Árvore Plantada (Salmos 1)",
@@ -29,5 +28,6 @@
       "title": "",
       "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3"
     }
-  }
+  },
+  "sequence": [7, 1, 2, 3, 7, 4, 5, 6]
 }
