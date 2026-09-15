@@ -245,9 +245,39 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                playNextTrack();
+                // Se o áudio estiver pausado e já tiver uma fonte carregada, apenas retoma de onde parou
+                if (audioElement.src && audioElement.paused && audioElement.currentTime > 0) {
+                    audioElement.play().catch(err => {
+                        console.error("Erro ao retomar:", err);
+                        playNextTrack();
+                    });
+                } else {
+                    // Se for o primeiro play ou se a faixa acabou, toca a próxima da fila
+                    playNextTrack();
+                }
             }
         };
+
+        function playNextTrack() {
+            if (!isPlaying || playlist.length === 0 || isTransitioning) return;
+            
+            isTransitioning = true;
+            setTimeout(() => { isTransitioning = false; }, 1000);
+
+            // Pega a faixa atual e avança o índice para a próxima de forma circular
+            const track = playlist[currentTrackIndex];
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+
+            const statusEl = document.getElementById('radio-status');
+            statusEl.innerText = track.title || ""; 
+            updateMediaSession(track.title);
+
+            audioElement.src = track.url;
+            audioElement.play().catch(err => {
+                console.error("Erro ao tocar:", err);
+                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
+            });
+        }
 
         audioElement.addEventListener('ended', () => {
             if (isPlaying && !isPausedByUser && !isTransitioning) {
