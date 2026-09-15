@@ -3,177 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospel Lab</title>
-    <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
+    <title>Estação Gospell Lab</title>
     <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #00e676;
+            --text-color: #ffffff;
+            --text-muted: #b0b0b0;
+        }
         body {
-            font-family: 'Courier Prime', monospace;
-            background-color: #ffffff;
-            color: #222222;
-            max-width: 650px;
-            margin: 40px auto;
-            padding: 0 20px;
-            box-sizing: border-box;
-            text-align: center;
-            font-weight: normal;
-        }
-
-        /* Título Principal com Amatic SC */
-        .site-title {
-            font-family: 'Amatic SC', cursive;
-            font-size: 60px;
-            font-weight: 700;
-            letter-spacing: 2px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
-            color: #111;
-            line-height: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
-
-        /* Subtítulo ajustado */
-        .site-subtitle {
-            font-family: 'Courier Prime', monospace;
-            font-size: 11px;
-            letter-spacing: 1.5px;
-            margin: 12px 0 35px 0;
-            color: #555;
+        .player-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+        .status {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
-
-        /* Títulos das Seções com Amatic SC */
-        .section-title {
-            font-family: 'Amatic SC', cursive;
-            font-size: 32px;
-            font-weight: 700;
-            text-align: left;
-            margin: 35px 0 15px 0;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 2px;
-            line-height: 1;
-        }
-
-        .radio-ticker-box {
-            background: transparent;
-            padding: 10px 0;
-            font-size: 13px;
-            text-align: left;
-            min-height: 30px;
+        .track-info {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            min-height: 50px;
             display: flex;
             align-items: center;
-            transition: opacity 0.5s ease-in-out;
-            opacity: 1;
-            font-family: 'Courier Prime', monospace;
+            justify-content: center;
         }
-        .radio-ticker-box.fade-out {
-            opacity: 0;
-        }
-
-        .radio-player-container {
-            background-color: #ffffff;
-            text-align: left;
+        audio {
             width: 100%;
-            box-sizing: border-box;
+            margin-top: 15px;
         }
-
-        .texto-expansivel-box {
-            background: transparent;
-            text-align: left;
-            font-size: 13px;
-            line-height: 1.6;
-            font-family: 'Courier Prime', monospace;
-        }
-        .texto-expansivel-conteudo {
-            overflow: hidden;
-            max-height: 60px;
-            transition: max-height 0.5s ease-in-out;
-        }
-        .texto-expansivel-botao {
-            margin-top: 12px;
-            font-size: 10px;
-            cursor: pointer;
-            opacity: 0.7;
-            display: inline-block;
-            letter-spacing: 1px;
-            font-family: 'Courier Prime', monospace;
-            text-transform: uppercase;
-        }
-        .texto-expansivel-botao:hover {
-            opacity: 1;
-        }
-
-        .divider {
-            border-top: 1px solid #e0e0e0;
-            width: 100%;
-            margin: 40px 0 20px 0;
-        }
-
-        /* Rodapé com fonte bem menor */
-        footer {
-            font-size: 9px;
-            color: #777;
-            letter-spacing: 0.5px;
-            line-height: 1.4;
+        .radio-ticker-box {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
     </style>
 </head>
 <body>
 
-    <h1 class="site-title">Rádio Gospel Lab</h1>
-    <div class="site-subtitle">Apresentando: Igreja Batista Luz</div>
-
-    <div class="section-title">Programação</div>
-    <div class="radio-player-container">
-        <div style="margin-bottom: 12px;">
-            <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
-                <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
-                <span>Ao Vivo</span>
-            </div>
-            <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
-            </div>
-        </div>
+    <div class="player-container">
+        <h1>Estação Gospel Lab</h1>
+        <div id="radio-status" class="status">CARREGANDO...</div>
+        <div id="track-title" class="track-info">Conectando à programação...</div>
+        
+        <audio id="audio-player" controls></audio>
+        
+        <div id="radio-mensagens-container" class="radio-ticker-box"></div>
     </div>
-
-    <audio id="native-audio" preload="auto"></audio>
-
-    <div class="section-title">Mensagem do Dia</div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-estatico" class="texto-expansivel-conteudo">
-            <p style="margin: 0 0 10px 0;">Carregando informações...</p>
-        </div>
-        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
-    </div>
-
-    <div class="section-title">Avisos</div>
-    <div id="radio-mensagens-container" class="radio-ticker-box">
-        <span id="radio-mensagem-texto">Carregando avisos...</span>
-    </div>
-
-    <div class="divider"></div>
-    <footer>
-        Copyright © 2026 Rádio Gospel Lab<br>
-        Hospedado no GitHub Pages
-    </footer>
 
     <script>
-        const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
-        const PLAYLIST_URL = BASE_URL + 'playlist.json';
-        const NEWS_URL = BASE_URL + 'news.txt';
-        const SOBRE_URL = BASE_URL + 'sobre.txt';
-        const CACHE_NAME = 'gospel-lab-audio-v1';
+        let playlistTracks = [];
+        let currentIndex = 0;
+        const audioPlayer = document.getElementById('audio-player');
+        const statusEl = document.getElementById('radio-status');
+        const titleEl = document.getElementById('track-title');
 
-        let playlist = [];
-        let currentTrackIndex = 0;
-        let isPlaying = false;
-        let isPausedByUser = false;
-        let isTransitioning = false;
-
-        const audioElement = document.getElementById('native-audio');
-
-       async function parsePlaylistCSV(url) {
+        async function parsePlaylistJSON(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const data = await response.json();
@@ -194,137 +104,43 @@
             }
         }
 
-        function updateMediaSession(title) {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: title || 'Rádio Gospel Lab',
-                    artist: 'Rádio Gospel Lab',
-                    album: 'Programação Ao Vivo'
-                });
-                navigator.mediaSession.setActionHandler('play', () => { if (!isPlaying) toggleRadio(); });
-                navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) toggleRadio(); });
-                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextTrack(); });
+        async function initRadioData() {
+            statusEl.textContent = "CARREGANDO...";
+            playlistTracks = await parsePlaylistJSON('playlist.json');
+            
+            if (playlistTracks.length > 0) {
+                statusEl.textContent = "AO VIVO";
+                currentIndex = 0;
+                playTrack(currentIndex);
+            } else {
+                statusEl.textContent = "ERRO NA PLAYLIST";
+                titleEl.textContent = "Não foi possível carregar as faixas.";
             }
         }
 
-        window.toggleRadio = async function() {
-            const statusEl = document.getElementById('radio-status');
-            const iconEl = document.getElementById('radio-icon');
-            const dotEl = document.getElementById('radio-dot');
-
-            if (playlist.length === 0) {
-                statusEl.innerText = "Carregando...";
-                await initRadioData();
-                if (playlist.length === 0) {
-                    statusEl.innerText = "Erro na playlist";
-                    return;
-                }
+        function playTrack(index) {
+            if (index >= playlistTracks.length) {
+                currentIndex = 0; // Loop infinito da grade
             }
+            const track = playlistTracks[currentIndex];
+            titleEl.textContent = track.title ? track.title : "Tocando Vinheta / Intervalo";
+            audioPlayer.src = track.url;
+            audioPlayer.play().catch(e => {
+                console.log("Autoplay bloqueado pelo navegador, aguardando interação.", e);
+            });
+        }
 
-            if (isPlaying) {
-                isPausedByUser = true;
-                audioElement.pause();
-                isPlaying = false;
-                statusEl.innerText = "Pausado";
-                iconEl.innerHTML = "&#9654;";
-                dotEl.style.backgroundColor = "#cccccc";
-            } else {
-                isPausedByUser = false;
-                isPlaying = true;
-                iconEl.innerHTML = "&#10074;&#10074;";
-                dotEl.style.backgroundColor = "#2ecc71";
-                
-                playNextTrack();
-            }
-        };
-
-        audioElement.addEventListener('ended', () => {
-            if (isPlaying && !isPausedByUser && !isTransitioning) {
-                playNextTrack();
-            }
+        audioPlayer.addEventListener('ended', () => {
+            currentIndex++;
+            playTrack(currentIndex);
         });
 
-        function playNextTrack() {
-            if (!isPlaying || playlist.length === 0 || isTransitioning) return;
-            
-            isTransitioning = true;
-            setTimeout(() => { isTransitioning = false; }, 1000);
-
-            const track = playlist[currentTrackIndex];
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-
-            const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title || ""; 
-            updateMediaSession(track.title);
-
-            audioElement.src = track.url;
-            audioElement.play().catch(err => {
-                console.error("Erro ao tocar:", err);
-                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
-            });
+        function carregarAvisos() {
+            // Espaço reservado para avisos futuros
         }
 
-        async function carregarAvisos() {
-            try {
-                const response = await fetch(NEWS_URL + "?t=" + new Date().getTime());
-                const data = await response.text();
-                const linhas = data.split("\n");
-                let mensagens = [];
-                for (let l of linhas) {
-                    let linha = l.trim();
-                    if (linha && !linha.startsWith("#")) mensagens.push(linha);
-                }
-                const elTexto = document.getElementById("radio-mensagem-texto");
-                const elContainer = document.getElementById("radio-mensagens-container");
-                if (mensagens.length > 0) {
-                    let idx = 0;
-                    elTexto.innerText = mensagens[idx];
-                    setInterval(() => {
-                        elContainer.classList.add("fade-out");
-                        setTimeout(() => {
-                            idx = (idx + 1) % mensagens.length;
-                            elTexto.innerText = mensagens[idx];
-                            elContainer.classList.remove("fade-out");
-                        }, 500);
-                    }, 10000);
-                } else {
-                    elTexto.innerText = "Acompanhe nossa programação.";
-                }
-            } catch (e) {
-                document.getElementById("radio-mensagem-texto").innerText = "Acompanhe nossa programação.";
-            }
-        }
-
-        async function carregarTextoSobre() {
-            try {
-                const response = await fetch(SOBRE_URL + "?t=" + new Date().getTime());
-                const texto = await response.text();
-                const linhas = texto.split("\n");
-                let htmlGerado = "";
-                for (let l of linhas) {
-                    let linha = l.trim();
-                    if (linha) htmlGerado += `<p style="margin: 0 0 10px 0;">${linha}</p>`;
-                }
-                if (htmlGerado) document.getElementById("conteudo-estatico").innerHTML = htmlGerado;
-            } catch (e) {}
-        }
-
-        window.toggleTexto = function() {
-            const conteudo = document.getElementById('conteudo-estatico');
-            const botao = document.getElementById('botao-estatico');
-            if (conteudo.style.maxHeight === '60px') {
-                conteudo.style.maxHeight = '2000px';
-                botao.innerText = 'Ver menos';
-            } else {
-                conteudo.style.maxHeight = '60px';
-                botao.innerText = 'Ver mais';
-            }
-        };
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
-            });
+        function carregarTextoSobre() {
+            // Espaço reservado para texto sobre
         }
 
         document.addEventListener("DOMContentLoaded", () => {
