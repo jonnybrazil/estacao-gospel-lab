@@ -20,18 +20,22 @@
       "title": "Maior é o Teu Amor (Efésios 3:19)",
       "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Maior%20%C3%A9%20o%20Teu%20Amor.mp3"
     },
-    "6": {
+   "6": {
       "title": "Cuida de Mim (Salmos 34)",
       "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/Cuida%20de%20Mim_Salmo%2034.mp3"
     },
     "7": {
       "title": "",
-      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3"
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/tragicomico_vinheta.mp3"
     },
     "8": {
+      "title": "",
+      "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/vinheta_radio_leb.mp3"
+    },
+    "9": {
       "title": "Queria Entender (João 3:16)",
       "url": "https://raw.githubusercontent.com/jonnybrazil/estacao-gospel-lab/main/queria_entender.mp3"
     }
   },
-  "sequence": ["7", "8", "1", "2", "3", "7", "4", "8", "5", "6"]
+  "sequence": ["8", "6", "2", "1", "3", "7", "4", "2", "5", "1"]
 }
