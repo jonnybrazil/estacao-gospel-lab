@@ -122,6 +122,23 @@
             letter-spacing: 0.5px;
             line-height: 1.4;
         }
+
+        /* Tela de Manutenção */
+        #manutencao-screen {
+            display: none;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        #manutencao-screen h2 {
+            font-family: 'Amatic SC', cursive;
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+        #manutencao-screen p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -129,42 +146,51 @@
     <h1 class="site-title">Rádio Gospel Lab</h1>
     <div class="site-subtitle">Apresentando: Igreja Batista Luz</div>
 
-    <div class="section-title">Programação</div>
-    <div class="radio-player-container">
-        <div style="margin-bottom: 12px;">
-            <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
-                <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
-                <span>Ao Vivo</span>
+    <!-- TELA DE MANUTENÇÃO (Oculta por padrão) -->
+    <div id="manutencao-screen">
+        <h2>Ajustando os ponteiros...</h2>
+        <p>Estamos realizando melhorias na programação e nos ajustes técnicos da rádio. Voltamos em instantes!</p>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL DA RÁDIO -->
+    <div id="conteudo-principal">
+        <div class="section-title">Programação</div>
+        <div class="radio-player-container">
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
+                    <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
+                    <span>Ao Vivo</span>
+                </div>
+                <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
+                    <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
+                    <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
+                </div>
             </div>
-            <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
+        </div>
+
+        <audio id="native-audio" preload="auto"></audio>
+
+        <div class="section-title">Mensagem do Dia</div>
+        <div class="texto-expansivel-box">
+            <div id="conteudo-estatico" class="texto-expansivel-conteudo">
+                <p style="margin: 0 0 10px 0;">Carregando informações...</p>
             </div>
+            <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
         </div>
-    </div>
 
-    <audio id="native-audio" preload="auto"></audio>
-
-    <div class="section-title">Mensagem do Dia</div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-estatico" class="texto-expansivel-conteudo">
-            <p style="margin: 0 0 10px 0;">Carregando informações...</p>
+        <div class="section-title">Avisos</div>
+        <div id="radio-mensagens-container" class="radio-ticker-box">
+            <span id="radio-mensagem-texto">Carregando avisos...</span>
         </div>
-        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
-    </div>
 
-    <div class="section-title">Avisos</div>
-    <div id="radio-mensagens-container" class="radio-ticker-box">
-        <span id="radio-mensagem-texto">Carregando avisos...</span>
-    </div>
-
-    <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
-    <div class="section-title">Patrocinadores</div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
-            <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
+        <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
+        <div class="section-title">Patrocinadores</div>
+        <div class="texto-expansivel-box">
+            <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
+                <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
+            </div>
+            <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
         </div>
-        <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
     </div>
 
     <div class="divider"></div>
@@ -174,6 +200,9 @@
     </footer>
 
     <script>
+        // CHAVE DE CONTROLE DE MANUTENÇÃO: Altere para 'true' para ativar a tela de manutenção
+        const MODO_MANUTENCAO = false;
+
         const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
         const PLAYLIST_URL = BASE_URL + 'playlist.json';
         const NEWS_URL = BASE_URL + 'news.txt';
@@ -385,7 +414,6 @@
             const conteudo = document.getElementById('conteudo-ofertas');
             const botao = document.getElementById('botao-ofertas');
             
-            // Remove a classe de fechamento inicial se ela existir para permitir a alternância suave
             conteudo.classList.remove('conteudo-fechado-inicial');
 
             if (conteudo.style.maxHeight === '0px' || conteudo.style.maxHeight === '' || !conteudo.style.maxHeight) {
@@ -397,6 +425,15 @@
             }
         };
 
+        // Gatilho inteligente para atualizar avisos quando o celular acorda/volta para a aba
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === "visible" && !MODO_MANUTENCAO) {
+                carregarAvisos();
+                carregarTextoSobre();
+                carregarOfertas();
+            }
+        });
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -404,10 +441,15 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            carregarAvisos();
-            carregarTextoSobre();
-            initRadioData();
-            carregarOfertas();
+            if (MODO_MANUTENCAO) {
+                document.getElementById('conteudo-principal').style.display = 'none';
+                document.getElementById('manutencao-screen').style.display = 'block';
+            } else {
+                carregarAvisos();
+                carregarTextoSobre();
+                initRadioData();
+                carregarOfertas();
+            }
         });
     </script>
 </body>
