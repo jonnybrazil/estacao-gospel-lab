@@ -102,13 +102,6 @@
         .texto-expansivel-botao:hover {
             opacity: 1;
         }
-        <div class="section-title">Ofertas</div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-ofertas" class="texto-expansivel-conteudo">
-            <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
-        </div>
-        <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
-    </div>
 
         .divider {
             border-top: 1px solid #e0e0e0;
@@ -159,6 +152,15 @@
         <span id="radio-mensagem-texto">Carregando avisos...</span>
     </div>
 
+    <!-- SEÇÃO DE OFERTAS CORRIGIDA NO LUGAR CERTO -->
+    <div class="section-title">Ofertas</div>
+    <div class="texto-expansivel-box">
+        <div id="conteudo-ofertas" class="texto-expansivel-conteudo">
+            <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
+        </div>
+        <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
+    </div>
+
     <div class="divider"></div>
     <footer>
         Copyright © 2026 Rádio Gospel Lab<br>
@@ -170,6 +172,7 @@
         const PLAYLIST_URL = BASE_URL + 'playlist.json';
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
+        const OFERTAS_URL = BASE_URL + 'ofertas.txt';
         const CACHE_NAME = 'gospel-lab-audio-v1';
 
         let playlist = [];
@@ -252,14 +255,12 @@
                 iconEl.innerHTML = "&#10074;&#10074;";
                 dotEl.style.backgroundColor = "#2ecc71";
                 
-                // Se o áudio estiver pausado e já tiver uma fonte carregada, apenas retoma de onde parou
                 if (audioElement.src && audioElement.paused && audioElement.currentTime > 0) {
                     audioElement.play().catch(err => {
                         console.error("Erro ao retomar:", err);
                         playNextTrack();
                     });
                 } else {
-                    // Se for o primeiro play ou se a faixa acabou, toca a próxima da fila
                     playNextTrack();
                 }
             }
@@ -271,22 +272,16 @@
             isTransitioning = true;
             setTimeout(() => { isTransitioning = false; }, 1000);
 
-            // Garante que o índice está dentro dos limites
             if (currentTrackIndex >= playlist.length) {
                 currentTrackIndex = 0;
             }
 
-            // Pega a faixa atual para tocar
             const track = playlist[currentTrackIndex];
-
-            // Atualiza o texto na tela e a sessão de mídia ANTES de avançar o índice
             const statusEl = document.getElementById('radio-status');
             statusEl.innerText = track.title || ""; 
             updateMediaSession(track.title);
 
             audioElement.src = track.url;
-            
-            // Avança o índice APENAS PARA A PRÓXIMA reprodução
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
 
             audioElement.play().catch(err => {
@@ -300,26 +295,6 @@
                 playNextTrack();
             }
         });
-
-        function playNextTrack() {
-            if (!isPlaying || playlist.length === 0 || isTransitioning) return;
-            
-            isTransitioning = true;
-            setTimeout(() => { isTransitioning = false; }, 1000);
-
-            const track = playlist[currentTrackIndex];
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
-
-            const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title || ""; 
-            updateMediaSession(track.title);
-
-            audioElement.src = track.url;
-            audioElement.play().catch(err => {
-                console.error("Erro ao tocar:", err);
-                setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
-            });
-        }
 
         async function carregarAvisos() {
             try {
@@ -369,7 +344,7 @@
         window.toggleTexto = function() {
             const conteudo = document.getElementById('conteudo-estatico');
             const botao = document.getElementById('botao-estatico');
-            if (conteudo.style.maxHeight === '60px') {
+            if (conteudo.style.maxHeight === '60px' || conteudo.style.maxHeight === '') {
                 conteudo.style.maxHeight = '2000px';
                 botao.innerText = 'Ver menos';
             } else {
@@ -377,20 +352,6 @@
                 botao.innerText = 'Ver mais';
             }
         };
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarAvisos();
-            carregarTextoSobre();
-            initRadioData();
-            carregarOfertas();
-        });
-        const OFERTAS_URL = BASE_URL + 'ofertas.txt';
 
         async function carregarOfertas() {
             try {
@@ -425,6 +386,19 @@
                 botao.innerText = 'Ver mais';
             }
         };
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarAvisos();
+            carregarTextoSobre();
+            initRadioData();
+            carregarOfertas();
+        });
     </script>
 </body>
 </html>
