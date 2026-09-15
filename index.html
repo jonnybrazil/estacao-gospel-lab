@@ -173,7 +173,7 @@
 
         const audioElement = document.getElementById('native-audio');
 
-        async function parsePlaylistCSV(url) {
+       async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const data = await response.json();
@@ -191,17 +191,6 @@
             } catch (error) {
                 console.error("Erro ao carregar playlist:", error);
                 return [];
-            }
-        }
-
-        async function initRadioData() {
-            playlist = await parsePlaylistCSV(PLAYLIST_URL);
-            
-            if ('caches' in window) {
-                const cache = await caches.open(CACHE_NAME);
-                for (let track of playlist) {
-                    try { cache.add(track.url); } catch(e){}
-                }
             }
         }
 
