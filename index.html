@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rádio Gospell Lab</title>
+    <title>Rádio Gospel Lab</title>
     <!-- Importando Amatic SC para títulos e Courier Prime para o corpo -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
@@ -89,6 +89,12 @@
             max-height: 60px;
             transition: max-height 0.5s ease-in-out;
         }
+
+        /* Classe específica para a caixa de ofertas nascer totalmente fechada */
+        .conteudo-fechado-inicial {
+            max-height: 0px !important;
+        }
+
         .texto-expansivel-botao {
             margin-top: 12px;
             font-size: 10px;
@@ -152,10 +158,10 @@
         <span id="radio-mensagem-texto">Carregando avisos...</span>
     </div>
 
-    <!-- SEÇÃO DE OFERTAS CORRIGIDA NO LUGAR CERTO -->
+    <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
     <div class="section-title">Ofertas</div>
     <div class="texto-expansivel-box">
-        <div id="conteudo-ofertas" class="texto-expansivel-conteudo">
+        <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
             <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
         </div>
         <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
@@ -378,11 +384,15 @@
         window.toggleOfertas = function() {
             const conteudo = document.getElementById('conteudo-ofertas');
             const botao = document.getElementById('botao-ofertas');
-            if (conteudo.style.maxHeight === '60px' || conteudo.style.maxHeight === '') {
+            
+            // Remove a classe de fechamento inicial se ela existir para permitir a alternância suave
+            conteudo.classList.remove('conteudo-fechado-inicial');
+
+            if (conteudo.style.maxHeight === '0px' || conteudo.style.maxHeight === '' || !conteudo.style.maxHeight) {
                 conteudo.style.maxHeight = '2000px';
                 botao.innerText = 'Ver menos';
             } else {
-                conteudo.style.maxHeight = '60px';
+                conteudo.style.maxHeight = '0px';
                 botao.innerText = 'Ver mais';
             }
         };
