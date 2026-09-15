@@ -388,7 +388,43 @@
             carregarAvisos();
             carregarTextoSobre();
             initRadioData();
+            carregarOfertas();
         });
+        const OFERTAS_URL = BASE_URL + 'ofertas.txt';
+
+        async function carregarOfertas() {
+            try {
+                const response = await fetch(OFERTAS_URL + "?t=" + new Date().getTime());
+                const texto = await response.text();
+                const linhas = texto.split("\n");
+                let htmlGerado = "";
+                for (let l of linhas) {
+                    let linha = l.trim();
+                    if (linha) {
+                        htmlGerado += `<p style="margin: 0 0 10px 0;">${linha}</p>`;
+                    }
+                }
+                if (htmlGerado) {
+                    document.getElementById("conteudo-ofertas").innerHTML = htmlGerado;
+                } else {
+                    document.getElementById("conteudo-ofertas").innerHTML = "<p style='margin: 0;'>Nenhuma oferta no momento.</p>";
+                }
+            } catch (e) {
+                document.getElementById("conteudo-ofertas").innerHTML = "<p style='margin: 0;'>Acompanhe nossas recomendações em breve.</p>";
+            }
+        }
+
+        window.toggleOfertas = function() {
+            const conteudo = document.getElementById('conteudo-ofertas');
+            const botao = document.getElementById('botao-ofertas');
+            if (conteudo.style.maxHeight === '60px' || conteudo.style.maxHeight === '') {
+                conteudo.style.maxHeight = '2000px';
+                botao.innerText = 'Ver menos';
+            } else {
+                conteudo.style.maxHeight = '60px';
+                botao.innerText = 'Ver mais';
+            }
+        };
     </script>
 </body>
 </html>
