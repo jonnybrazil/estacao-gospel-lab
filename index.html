@@ -264,15 +264,24 @@
             isTransitioning = true;
             setTimeout(() => { isTransitioning = false; }, 1000);
 
-            // Pega a faixa atual e avança o índice para a próxima de forma circular
-            const track = playlist[currentTrackIndex];
-            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            // Garante que o índice está dentro dos limites
+            if (currentTrackIndex >= playlist.length) {
+                currentTrackIndex = 0;
+            }
 
+            // Pega a faixa atual para tocar
+            const track = playlist[currentTrackIndex];
+
+            // Atualiza o texto na tela e a sessão de mídia ANTES de avançar o índice
             const statusEl = document.getElementById('radio-status');
             statusEl.innerText = track.title || ""; 
             updateMediaSession(track.title);
 
             audioElement.src = track.url;
+            
+            // Avança o índice APENAS PARA A PRÓXIMA reprodução
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+
             audioElement.play().catch(err => {
                 console.error("Erro ao tocar:", err);
                 setTimeout(() => { if (isPlaying) playNextTrack(); }, 2000);
