@@ -385,6 +385,7 @@
             const conteudo = document.getElementById('conteudo-ofertas');
             const botao = document.getElementById('botao-ofertas');
             
+            // Remove a classe de fechamento inicial se ela existir para permitir a alternância suave
             conteudo.classList.remove('conteudo-fechado-inicial');
 
             if (conteudo.style.maxHeight === '0px' || conteudo.style.maxHeight === '' || !conteudo.style.maxHeight) {
