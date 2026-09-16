@@ -158,10 +158,14 @@
 
         /* Tela de Manutenção */
         #manutencao-screen {
-            display: none;
-            padding: 60px 20px;
-            text-align: center;
-        }
+    display: flex;
+    flex-direction: column; /* Empilha o conteúdo verticalmente */
+    justify-content: center; /* Centraliza no sentido vertical */
+    align-items: center; /* Centraliza no sentido horizontal */
+    min-height: 100vh; /* Ocupa a tela inteira */
+    padding: 60px 20px;
+    text-align: center;
+}
         #manutencao-screen h2 {
             font-family: 'Amatic SC', cursive;
             font-size: 45px;
