@@ -412,10 +412,10 @@
 
         async function carregarVisualizacoes() {
             try {
-                // Usando a rota alternativa funcional para contadores
                 const response = await fetch('https://countapi.mileshilliard.com/hit/radiogospellab/acessos');
                 const data = await response.json();
-                document.getElementById('view-counter').innerText = data.value;
+                // Ajustado de data.value para data.count
+                document.getElementById('view-counter').innerText = data.count !== undefined ? data.count : "-";
             } catch (e) {
                 document.getElementById('view-counter').innerText = "-";
             }
