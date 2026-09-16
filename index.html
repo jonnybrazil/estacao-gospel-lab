@@ -158,7 +158,7 @@
 
         /* Tela de Manutenção */
         #manutencao-screen {
-    display: none;
+    display: flex;
     flex-direction: column; /* Empilha o conteúdo verticalmente */
     justify-content: center; /* Centraliza no sentido vertical */
     align-items: center; /* Centraliza no sentido horizontal */
@@ -248,7 +248,7 @@
 
     <script>
         // CHAVE DE CONTROLE DE MANUTENÇÃO: Altere para 'true' para ativar a tela de manutenção
-        const MODO_MANUTENCAO = false;
+        const MODO_MANUTENCAO = true;
 
         const BASE_URL = "https://jonnybrazil.github.io/estacao-gospel-lab/";
         const PLAYLIST_URL = BASE_URL + 'playlist.json';
@@ -540,7 +540,7 @@
             initCounters();
             if (MODO_MANUTENCAO) {
                 document.getElementById('conteudo-principal').style.display = 'none';
-                document.getElementById('manutencao-screen').style.display = 'flex';
+                document.getElementById('manutencao-screen').style.display = 'block';
             } else {
                 carregarAvisos();
                 carregarTextoSobre();
