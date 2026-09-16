@@ -410,28 +410,25 @@
             }
         };
 
-        async function carregarVisualizacoes() {
+       async function carregarVisualizacoes() {
             try {
-                // Chave única para o site
+                // Pega o valor atual salvo no navegador do usuário
                 let views = localStorage.getItem('radio_gospel_lab_views');
                 
-                // Se for a primeira vez que esse usuário abre o site, incrementa
-                if (!localStorage.getItem('session_counted')) {
-                    if (!views) {
-                        views = 120; // Número inicial de base opcional (pode ajustar)
-                    } else {
-                        views = parseInt(views) + 1;
-                    }
-                    localStorage.setItem('radio_gospel_lab_views', views);
-                    localStorage.setItem('session_counted', 'true');
-                } else if (!views) {
+                // Se não existir, começa em 120. Se já existir, soma 1 a cada visita/atualização!
+                if (!views) {
                     views = 120;
-                    localStorage.setItem('radio_gospel_lab_views', views);
+                } else {
+                    views = parseInt(views) + 1;
                 }
-
+                
+                // Salva o novo valor
+                localStorage.setItem('radio_gospel_lab_views', views);
+                
+                // Mostra na tela
                 document.getElementById('view-counter').innerText = views;
             } catch (e) {
-                document.getElementById('view-counter').innerText = "1";
+                document.getElementById('view-counter').innerText = "-";
             }
         }
 
