@@ -41,7 +41,7 @@
             text-transform: uppercase;
         }
 
-        /* Títulos das Seções com Amatic SC */
+        /* Títulos das Seções com Amatic SC e Flexbox para os ícones */
         .section-title {
             font-family: 'Amatic SC', cursive;
             font-size: 32px;
@@ -52,6 +52,39 @@
             border-bottom: 1px solid #ddd;
             padding-bottom: 2px;
             line-height: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        /* Estilo para a área de contadores no estilo YouTube */
+        .youtube-stats-icons {
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            font-weight: normal;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            color: #555;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-btn {
+            background: none;
+            border: none;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            color: #555;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .stat-btn:hover {
+            color: #111;
         }
 
         .radio-ticker-box {
@@ -154,7 +187,17 @@
 
     <!-- CONTEÚDO PRINCIPAL DA RÁDIO -->
     <div id="conteudo-principal">
-        <div class="section-title">Programação</div>
+        <!-- Seção Programação com os ícones de contadores à direita -->
+        <div class="section-title">
+            <span>Programação</span>
+            <div class="youtube-stats-icons">
+                <span title="Acessos únicos">👁️ <span id="view-count">...</span></span>
+                <button id="like-btn" class="stat-btn" title="Curtir rádio">
+                    <span>❤️</span> <span id="like-count">...</span>
+                </button>
+            </div>
+        </div>
+
         <div class="radio-player-container">
             <div style="margin-bottom: 12px;">
                 <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
@@ -170,7 +213,7 @@
 
         <audio id="native-audio" preload="auto"></audio>
 
-        <div class="section-title">Mensagem do Dia</div>
+        <div class="section-title"><span>Mensagem do Dia</span></div>
         <div class="texto-expansivel-box">
             <div id="conteudo-estatico" class="texto-expansivel-conteudo">
                 <p style="margin: 0 0 10px 0;">Carregando informações...</p>
@@ -178,13 +221,13 @@
             <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
         </div>
 
-        <div class="section-title">Avisos</div>
+        <div class="section-title"><span>Avisos</span></div>
         <div id="radio-mensagens-container" class="radio-ticker-box">
             <span id="radio-mensagem-texto">Carregando avisos...</span>
         </div>
 
         <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
-        <div class="section-title">Patrocinadores</div>
+        <div class="section-title"><span>Patrocinadores</span></div>
         <div class="texto-expansivel-box">
             <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
                 <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
@@ -218,6 +261,42 @@
 
         const audioElement = document.getElementById('native-audio');
 
+        // Lógica dos Contadores (CountAPI)
+        async function initCounters() {
+            try {
+                // Registra visita única
+                const hitRes = await fetch('https://api.countapi.xyz/hit/radiogospellab.com.br/visits');
+                const hitData = await hitRes.json();
+                document.getElementById('view-count').innerText = hitData.value;
+            } catch (e) {
+                document.getElementById('view-count').innerText = '1';
+            }
+
+            try {
+                // Pega número atual de curtidas
+                const getRes = await fetch('https://api.countapi.xyz/get/radiogospellab.com.br/likes');
+                const getData = await getRes.json();
+                document.getElementById('like-count').innerText = getData.value;
+            } catch (e) {
+                document.getElementById('like-count').innerText = '0';
+            }
+        }
+
+        // Ação de Curtir
+        document.getElementById('like-btn').addEventListener('click', async () => {
+            const likeBtn = document.getElementById('like-btn');
+            const likeCountSpan = document.getElementById('like-count');
+            try {
+                const res = await fetch('https://api.countapi.xyz/hit/radiogospellab.com.br/likes');
+                const data = await res.json();
+                likeCountSpan.innerText = data.value;
+                likeBtn.disabled = true;
+                likeBtn.style.opacity = '0.7';
+            } catch (e) {
+                console.error("Erro ao registrar curtida");
+            }
+        });
+
         async function parsePlaylistJSON(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
@@ -250,7 +329,6 @@
             }
         }
 
-        // Função inteligente que busca a playlist atualizada em segundo plano
         async function verificarAtualizacaoPlaylist() {
             try {
                 const novaPlaylist = await parsePlaylistJSON(PLAYLIST_URL);
@@ -338,7 +416,6 @@
             });
         }
 
-        // Na virada de cada faixa, verificamos atualizações na grade antes de prosseguir
         audioElement.addEventListener('ended', async () => {
             if (isPlaying && !isPausedByUser && !isTransitioning) {
                 await verificarAtualizacaoPlaylist();
@@ -440,7 +517,6 @@
             }
         };
 
-        // Gatilho inteligente ao retornar para a aba ou destravar o celular
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === "visible" && !MODO_MANUTENCAO) {
                 carregarAvisos();
@@ -457,6 +533,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
+            initCounters();
             if (MODO_MANUTENCAO) {
                 document.getElementById('conteudo-principal').style.display = 'none';
                 document.getElementById('manutencao-screen').style.display = 'block';
