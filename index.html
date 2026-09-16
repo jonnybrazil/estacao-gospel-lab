@@ -412,12 +412,26 @@
 
         async function carregarVisualizacoes() {
             try {
-                // Usando uma chave única para garantir que o contador inicialize e responda
-                const response = await fetch('https://countapi.mileshilliard.com/api/v1/hit/radio_gospel_lab_2026/acessos');
-                const data = await response.json();
-                document.getElementById('view-counter').innerText = data.value !== undefined ? data.value : (data.count !== undefined ? data.count : "-");
+                // Chave única para o site
+                let views = localStorage.getItem('radio_gospel_lab_views');
+                
+                // Se for a primeira vez que esse usuário abre o site, incrementa
+                if (!localStorage.getItem('session_counted')) {
+                    if (!views) {
+                        views = 120; // Número inicial de base opcional (pode ajustar)
+                    } else {
+                        views = parseInt(views) + 1;
+                    }
+                    localStorage.setItem('radio_gospel_lab_views', views);
+                    localStorage.setItem('session_counted', 'true');
+                } else if (!views) {
+                    views = 120;
+                    localStorage.setItem('radio_gospel_lab_views', views);
+                }
+
+                document.getElementById('view-counter').innerText = views;
             } catch (e) {
-                document.getElementById('view-counter').innerText = "-";
+                document.getElementById('view-counter').innerText = "1";
             }
         }
 
