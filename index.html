@@ -250,6 +250,19 @@
             }
         }
 
+        // Função inteligente que busca a playlist atualizada em segundo plano
+        async function verificarAtualizacaoPlaylist() {
+            try {
+                const novaPlaylist = await parsePlaylistJSON(PLAYLIST_URL);
+                if (novaPlaylist.length > 0) {
+                    playlist = novaPlaylist;
+                    console.log("Grade de programação atualizada em segundo plano.");
+                }
+            } catch (error) {
+                console.log("Mantendo a grade atual devido a falha na rede.");
+            }
+        }
+
         function updateMediaSession(title) {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
@@ -325,8 +338,10 @@
             });
         }
 
-        audioElement.addEventListener('ended', () => {
+        // Na virada de cada faixa, verificamos atualizações na grade antes de prosseguir
+        audioElement.addEventListener('ended', async () => {
             if (isPlaying && !isPausedByUser && !isTransitioning) {
+                await verificarAtualizacaoPlaylist();
                 playNextTrack();
             }
         });
@@ -425,12 +440,13 @@
             }
         };
 
-        // Gatilho inteligente para atualizar avisos quando o celular acorda/volta para a aba
+        // Gatilho inteligente ao retornar para a aba ou destravar o celular
         document.addEventListener("visibilitychange", function() {
             if (document.visibilityState === "visible" && !MODO_MANUTENCAO) {
                 carregarAvisos();
                 carregarTextoSobre();
                 carregarOfertas();
+                verificarAtualizacaoPlaylist();
             }
         });
 
