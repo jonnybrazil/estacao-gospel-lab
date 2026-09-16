@@ -41,7 +41,7 @@
             text-transform: uppercase;
         }
 
-        /* Títulos das Seções com Amatic SC */
+        /* Títulos das Seções com Amatic SC e Flexbox para alinhar o contador à direita */
         .section-title {
             font-family: 'Amatic SC', cursive;
             font-size: 32px;
@@ -52,6 +52,9 @@
             border-bottom: 1px solid #ddd;
             padding-bottom: 2px;
             line-height: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
         }
 
         .radio-ticker-box {
@@ -115,7 +118,7 @@
             margin: 40px 0 20px 0;
         }
 
-        /* Rodapé com fonte bem menor */
+        /* Rodapé limpo */
         footer {
             font-size: 9px;
             color: #777;
@@ -129,7 +132,15 @@
     <h1 class="site-title">Rádio Gospel Lab</h1>
     <div class="site-subtitle">Apresentando: Igreja Batista Luz</div>
 
-    <div class="section-title">Programação</div>
+    <!-- Seção Programação com o contador alinhado à direita -->
+    <div class="section-title">
+        <span>Programação</span>
+        <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
+            <span style="font-size: 13px;" title="Visualizações">&#128065;</span> 
+            <span id="view-counter">-</span>
+        </span>
+    </div>
+
     <div class="radio-player-container">
         <div style="margin-bottom: 12px;">
             <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
@@ -145,7 +156,7 @@
 
     <audio id="native-audio" preload="auto"></audio>
 
-    <div class="section-title">Mensagem do Dia</div>
+    <div class="section-title"><span>Mensagem do Dia</span></div>
     <div class="texto-expansivel-box">
         <div id="conteudo-estatico" class="texto-expansivel-conteudo">
             <p style="margin: 0 0 10px 0;">Carregando informações...</p>
@@ -153,13 +164,13 @@
         <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
     </div>
 
-    <div class="section-title">Avisos</div>
+    <div class="section-title"><span>Avisos</span></div>
     <div id="radio-mensagens-container" class="radio-ticker-box">
         <span id="radio-mensagem-texto">Carregando avisos...</span>
     </div>
 
     <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
-    <div class="section-title">Patrocinadores</div>
+    <div class="section-title"><span>Patrocinadores</span></div>
     <div class="texto-expansivel-box">
         <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
             <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
@@ -170,11 +181,7 @@
     <div class="divider"></div>
     <footer>
         Copyright © 2026 Rádio Gospel Lab<br>
-        Hospedado no GitHub Pages<br>
-        <div style="margin-top: 8px; font-size: 10px; color: #666; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 4px;">
-            <span style="font-size: 12px;" title="Visualizações">&#128065;</span> 
-            <span id="view-counter">-</span>
-        </div>
+        Hospedado no GitHub Pages
     </footer>
 
     <script>
