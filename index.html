@@ -137,9 +137,9 @@
         <span>Programação</span>
         <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-    <circle cx="12" cy="12" r="3.5"></circle>
-</svg> 
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3.5"></circle>
+            </svg> 
             <span id="view-counter">-</span>
         </span>
     </div>
@@ -207,43 +207,52 @@
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
                 const data = await response.text();
-                const linhas = data.split("\n");
+                const linhas = data.split(/\r?\n/);
                 
                 let itensMap = {};
                 let sequenciaMaster = [];
 
                 for (let l of linhas) {
                     let linha = l.trim();
-                    if (!linha || linha.startsWith("#")) continue;
+                    if (!linha || linha.startsWith("#") || linha.toLowerCase().startsWith("tipo,")) continue;
 
-                    let match = linha.match(/^([^,]+),([^,]+),(?:"([^"]*)"|([^,]+)),(.*)$/);
-                    
-                    if (!match) {
-                        let partes = linha.split(',');
-                        if (partes.length >= 4) {
-                            let tipo = partes[0].trim();
-                            let chave = partes[1].trim();
-                            let titulo = partes[2].trim().replace(/^["']|["']$/g, '');
-                            let urlAudio = partes.slice(3).join(',').trim().replace(/^["']|["']$/g, '');
+                    let campos = [];
+                    let dentroDeAspas = false;
+                    let campoAtual = "";
 
-                            if (tipo === 'SEQ' && chave === 'master') {
-                                sequenciaMaster = titulo.split(',').map(s => s.trim());
-                            } else if (tipo === 'ITEM') {
-                                itensMap[chave] = { title: titulo, url: urlAudio };
-                            }
+                    for (let i = 0; i < linha.length; i++) {
+                        let char = linha[i];
+                        if (char === '"') {
+                            dentroDeAspas = !dentroDeAspas;
+                        } else if (char === ',' && !dentroDeAspas) {
+                            campos.push(campoAtual.trim());
+                            campoAtual = "";
+                        } else {
+                            campoAtual += char;
                         }
-                        continue;
                     }
+                    campos.push(campoAtual.trim());
 
-                    let tipo = match[1].trim();
-                    let chave = match[2].trim();
-                    let valorTitulo = match[3] !== undefined ? match[3] : match[4];
-                    let urlAudio = match[5].trim().replace(/^["']|["']$/g, '');
+                    campos = campos.map(c => c.replace(/^["'\s]+|["'\s]+$/g, ''));
+
+                    if (campos.length < 3) continue;
+
+                    let tipo = campos[0].toUpperCase();
+                    let chave = campos[1];
+                    let valor = campos[2];
 
                     if (tipo === 'SEQ' && chave === 'master') {
-                        sequenciaMaster = valorTitulo.split(',').map(s => s.trim());
+                        sequenciaMaster = valor.split(',').map(s => s.replace(/^["'\s]+|["'\s]+$/g, '')).filter(Boolean);
                     } else if (tipo === 'ITEM') {
-                        itensMap[chave] = { title: valorTitulo, url: urlAudio };
+                        let rawPath = campos.slice(3).join(',').replace(/^["'\s]+|["'\s]+$/g, '');
+                        let nomeArquivo = rawPath.split('?')[0].split('/').pop();
+                        
+                        try { nomeArquivo = decodeURIComponent(nomeArquivo); } catch(e){}
+                        let urlAudio = "./" + encodeURI(nomeArquivo);
+
+                        if (chave && nomeArquivo) {
+                            itensMap[chave] = { title: valor || "Sem título", url: urlAudio };
+                        }
                     }
                 }
 
@@ -251,6 +260,8 @@
                 for (let chaveId of sequenciaMaster) {
                     if (itensMap[chaveId]) {
                         result.push(itensMap[chaveId]);
+                    } else if (itensMap["item" + chaveId]) {
+                        result.push(itensMap["item" + chaveId]);
                     }
                 }
 
@@ -447,22 +458,17 @@
             }
         };
 
-       async function carregarVisualizacoes() {
+        async function carregarVisualizacoes() {
             try {
-                // Pega o valor atual salvo no navegador do usuário
                 let views = localStorage.getItem('radio_gospel_lab_views');
                 
-                // Se não existir, começa em 120. Se já existir, soma 1 a cada visita/atualização!
                 if (!views) {
                     views = 120;
                 } else {
                     views = parseInt(views) + 1;
                 }
                 
-                // Salva o novo valor
                 localStorage.setItem('radio_gospel_lab_views', views);
-                
-                // Mostra na tela
                 document.getElementById('view-counter').innerText = views;
             } catch (e) {
                 document.getElementById('view-counter').innerText = "-";
