@@ -137,9 +137,9 @@
         <span>Programação</span>
         <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-    <circle cx="12" cy="12" r="3.5"></circle>
-</svg> 
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3.5"></circle>
+            </svg> 
             <span id="view-counter">-</span>
         </span>
     </div>
@@ -189,7 +189,7 @@
 
     <script>
         const BASE_URL = "";
-        const PLAYLIST_URL = BASE_URL + 'playlist.json';
+        const PLAYLIST_URL = BASE_URL + 'playlist.csv';
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
         const OFERTAS_URL = BASE_URL + 'ofertas.txt';
@@ -203,29 +203,70 @@
 
         const audioElement = document.getElementById('native-audio');
 
-        async function parsePlaylistJSON(url) {
+        // Função robusta para ler CSV estruturado com SEQ e ITEM
+        async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
-                const data = await response.json();
+                const data = await response.text();
+                const linhas = data.split("\n");
                 
-                let result = [];
-                if (data.sequence && data.catalog) {
-                    for (let id of data.sequence) {
-                        const track = data.catalog[id];
-                        if (track) {
-                            result.push(track);
+                let itensMap = {};
+                let sequenciaMaster = [];
+
+                for (let l of linhas) {
+                    let linha = l.trim();
+                    if (!linha || linha.startsWith("#")) continue;
+
+                    // Tratamento simples para lidar com campos entre aspas que contêm vírgulas (ex: "7,1,2,3...")
+                    let match = linha.match(/^([^,]+),([^,]+),(?:"([^"]*)"|([^,]+)),(.*)$/);
+                    
+                    if (!match) {
+                        // Fallback para divisão simples por vírgula se a linha for mais simples
+                        let partes = linha.split(',');
+                        if (partes.length >= 4) {
+                            let tipo = partes[0].trim();
+                            let chave = partes[1].trim();
+                            let titulo = partes[2].trim().replace(/^["']|["']$/g, '');
+                            let urlAudio = partes.slice(3).join(',').trim().replace(/^["']|["']$/g, '');
+
+                            if (tipo === 'SEQ' && chave === 'master') {
+                                sequenciaMaster = titulo.split(',').map(s => s.trim());
+                            } else if (tipo === 'ITEM') {
+                                itensMap[chave] = { title: titulo, url: urlAudio };
+                            }
                         }
+                        continue;
+                    }
+
+                    let tipo = match[1].trim();
+                    let chave = match[2].trim();
+                    let valorTitulo = match[3] !== undefined ? match[3] : match[4];
+                    let urlAudio = match[5].trim().replace(/^["']|["']$/g, '');
+
+                    if (tipo === 'SEQ' && chave === 'master') {
+                        sequenciaMaster = valorTitulo.split(',').map(s => s.trim());
+                    } else if (tipo === 'ITEM') {
+                        itensMap[chave] = { title: valorTitulo, url: urlAudio };
                     }
                 }
+
+                // Monta a playlist final respeitando rigorosamente a ordem da SEQ master
+                let result = [];
+                for (let chaveId of sequenciaMaster) {
+                    if (itensMap[chaveId]) {
+                        result.push(itensMap[chaveId]);
+                    }
+                }
+
                 return result;
             } catch (error) {
-                console.error("Erro ao carregar playlist:", error);
+                console.error("Erro ao carregar playlist CSV estruturada:", error);
                 return [];
             }
         }
 
         async function initRadioData() {
-            playlist = await parsePlaylistJSON(PLAYLIST_URL);
+            playlist = await parsePlaylistCSV(PLAYLIST_URL);
             
             if ('caches' in window) {
                 const cache = await caches.open(CACHE_NAME);
@@ -298,8 +339,10 @@
 
             const track = playlist[currentTrackIndex];
             const statusEl = document.getElementById('radio-status');
-            statusEl.innerText = track.title || ""; 
-            updateMediaSession(track.title);
+            
+            // Se a faixa for uma vinheta sem título (ex: string vazia), mostra "Vinheta" ou oculta, ou exibe o padrão
+            statusEl.innerText = track.title ? track.title : "Vinheta Gospel Lab"; 
+            updateMediaSession(track.title || "Vinheta Gospel Lab");
 
             audioElement.src = track.url;
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -410,22 +453,15 @@
             }
         };
 
-       async function carregarVisualizacoes() {
+        async function carregarVisualizacoes() {
             try {
-                // Pega o valor atual salvo no navegador do usuário
                 let views = localStorage.getItem('radio_gospel_lab_views');
-                
-                // Se não existir, começa em 120. Se já existir, soma 1 a cada visita/atualização!
                 if (!views) {
                     views = 120;
                 } else {
                     views = parseInt(views) + 1;
                 }
-                
-                // Salva o novo valor
                 localStorage.setItem('radio_gospel_lab_views', views);
-                
-                // Mostra na tela
                 document.getElementById('view-counter').innerText = views;
             } catch (e) {
                 document.getElementById('view-counter').innerText = "-";
