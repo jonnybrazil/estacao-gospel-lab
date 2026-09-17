@@ -137,9 +137,9 @@
         <span>Programação</span>
         <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                <circle cx="12" cy="12" r="3.5"></circle>
-            </svg> 
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+    <circle cx="12" cy="12" r="3.5"></circle>
+</svg> 
             <span id="view-counter">-</span>
         </span>
     </div>
@@ -193,7 +193,7 @@
         const NEWS_URL = BASE_URL + 'news.txt';
         const SOBRE_URL = BASE_URL + 'sobre.txt';
         const OFERTAS_URL = BASE_URL + 'ofertas.txt';
-        const CACHE_NAME = 'gospel-lab-audio-v1';
+        const CACHE_NAME = 'gospel-lab-audio-v2';
 
         let playlist = [];
         let currentTrackIndex = 0;
@@ -203,7 +203,6 @@
 
         const audioElement = document.getElementById('native-audio');
 
-        // Função robusta para ler CSV estruturado com SEQ e ITEM
         async function parsePlaylistCSV(url) {
             try {
                 const response = await fetch(url + "?t=" + new Date().getTime());
@@ -217,11 +216,9 @@
                     let linha = l.trim();
                     if (!linha || linha.startsWith("#")) continue;
 
-                    // Tratamento simples para lidar com campos entre aspas que contêm vírgulas (ex: "7,1,2,3...")
                     let match = linha.match(/^([^,]+),([^,]+),(?:"([^"]*)"|([^,]+)),(.*)$/);
                     
                     if (!match) {
-                        // Fallback para divisão simples por vírgula se a linha for mais simples
                         let partes = linha.split(',');
                         if (partes.length >= 4) {
                             let tipo = partes[0].trim();
@@ -250,7 +247,6 @@
                     }
                 }
 
-                // Monta a playlist final respeitando rigorosamente a ordem da SEQ master
                 let result = [];
                 for (let chaveId of sequenciaMaster) {
                     if (itensMap[chaveId]) {
@@ -339,10 +335,8 @@
 
             const track = playlist[currentTrackIndex];
             const statusEl = document.getElementById('radio-status');
-            
-            // Se a faixa for uma vinheta sem título (ex: string vazia), mostra "Vinheta" ou oculta, ou exibe o padrão
-            statusEl.innerText = track.title ? track.title : "Vinheta Gospel Lab"; 
-            updateMediaSession(track.title || "Vinheta Gospel Lab");
+            statusEl.innerText = track.title || ""; 
+            updateMediaSession(track.title);
 
             audioElement.src = track.url;
             currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
@@ -453,15 +447,22 @@
             }
         };
 
-        async function carregarVisualizacoes() {
+       async function carregarVisualizacoes() {
             try {
+                // Pega o valor atual salvo no navegador do usuário
                 let views = localStorage.getItem('radio_gospel_lab_views');
+                
+                // Se não existir, começa em 120. Se já existir, soma 1 a cada visita/atualização!
                 if (!views) {
                     views = 120;
                 } else {
                     views = parseInt(views) + 1;
                 }
+                
+                // Salva o novo valor
                 localStorage.setItem('radio_gospel_lab_views', views);
+                
+                // Mostra na tela
                 document.getElementById('view-counter').innerText = views;
             } catch (e) {
                 document.getElementById('view-counter').innerText = "-";
