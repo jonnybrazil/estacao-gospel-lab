@@ -112,6 +112,13 @@
             opacity: 1;
         }
 
+        /* Estilo da Tela Em Construção */
+        #tela-construcao {
+            display: none;
+            padding: 30px 0;
+            text-align: left;
+        }
+
         .divider {
             border-top: 1px solid #e0e0e0;
             width: 100%;
@@ -132,53 +139,64 @@
     <h1 class="site-title">Rádio Gospel Lab</h1>
     <div class="site-subtitle">Apresentando: Igreja Batista Luz</div>
 
-    <!-- Seção Programação com o contador alinhado à direita -->
-    <div class="section-title">
-        <span>Programação</span>
-        <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                <circle cx="12" cy="12" r="3.5"></circle>
-            </svg> 
-            <span id="view-counter">-</span>
-        </span>
+    <!-- TELA EM CONSTRUÇÃO -->
+    <div id="tela-construcao">
+        <div class="section-title"><span>Em Construção</span></div>
+        <p style="font-size: 13px; line-height: 1.6; margin-top: 15px;">
+            Estamos atualizando nossa plataforma e programação. Voltaremos em breve com novidades!
+        </p>
     </div>
 
-    <div class="radio-player-container">
-        <div style="margin-bottom: 12px;">
-            <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
-                <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
-                <span>Ao Vivo</span>
+    <!-- CONTEÚDO PRINCIPAL DO SITE -->
+    <div id="conteudo-principal">
+        <!-- Seção Programação com o contador alinhado à direita -->
+        <div class="section-title">
+            <span>Programação</span>
+            <span style="font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: normal; display: inline-flex; align-items: center; gap: 4px; color: #555;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                    <circle cx="12" cy="12" r="3.5"></circle>
+                </svg> 
+                <span id="view-counter">-</span>
+            </span>
+        </div>
+
+        <div class="radio-player-container">
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 10px; color: #666; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;">
+                    <span id="radio-dot" style="height: 7px; width: 7px; background-color: #cccccc; border-radius: 50%; display: inline-block;"></span>
+                    <span>Ao Vivo</span>
+                </div>
+                <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
+                    <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
+                    <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
+                </div>
             </div>
-            <div style="display: flex; align-items: center; cursor: pointer;" onclick="toggleRadio()">
-                <span id="radio-icon" style="font-size: 14px; margin-right: 10px; line-height: 1;">&#9654;</span>
-                <span id="radio-status" style="font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Iniciar</span>
+        </div>
+
+        <audio id="native-audio" preload="auto"></audio>
+
+        <div class="section-title"><span>Mensagem do Dia</span></div>
+        <div class="texto-expansivel-box">
+            <div id="conteudo-estatico" class="texto-expansivel-conteudo">
+                <p style="margin: 0 0 10px 0;">Carregando informações...</p>
             </div>
+            <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
         </div>
-    </div>
 
-    <audio id="native-audio" preload="auto"></audio>
-
-    <div class="section-title"><span>Mensagem do Dia</span></div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-estatico" class="texto-expansivel-conteudo">
-            <p style="margin: 0 0 10px 0;">Carregando informações...</p>
+        <div class="section-title"><span>Avisos</span></div>
+        <div id="radio-mensagens-container" class="radio-ticker-box">
+            <span id="radio-mensagem-texto">Carregando avisos...</span>
         </div>
-        <span id="botao-estatico" class="texto-expansivel-botao" onclick="toggleTexto()">Ver mais</span>
-    </div>
 
-    <div class="section-title"><span>Avisos</span></div>
-    <div id="radio-mensagens-container" class="radio-ticker-box">
-        <span id="radio-mensagem-texto">Carregando avisos...</span>
-    </div>
-
-    <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
-    <div class="section-title"><span>Patrocinadores</span></div>
-    <div class="texto-expansivel-box">
-        <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
-            <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
+        <!-- SEÇÃO DE OFERTAS COM ALTURA INICIAL ZERO -->
+        <div class="section-title"><span>Patrocinadores</span></div>
+        <div class="texto-expansivel-box">
+            <div id="conteudo-ofertas" class="texto-expansivel-conteudo conteudo-fechado-inicial">
+                <p style="margin: 0 0 10px 0;">Carregando ofertas...</p>
+            </div>
+            <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
         </div>
-        <span id="botao-ofertas" class="texto-expansivel-botao" onclick="toggleOfertas()">Ver mais</span>
     </div>
 
     <div class="divider"></div>
@@ -188,6 +206,11 @@
     </footer>
 
     <script>
+        // ============================================================
+        // MODO EM CONSTRUÇÃO: Altere para 'true' para ativar ou 'false' para desativar
+        // ============================================================
+        const MODO_EM_CONSTRUCAO = true;
+
         const BASE_URL = "";
         const PLAYLIST_URL = BASE_URL + 'playlist.csv';
         const NEWS_URL = BASE_URL + 'news.txt';
@@ -202,6 +225,18 @@
         let isTransitioning = false;
 
         const audioElement = document.getElementById('native-audio');
+
+        function verificarModoConstrucao() {
+            const elConstrucao = document.getElementById('tela-construcao');
+            const elPrincipal = document.getElementById('conteudo-principal');
+            if (MODO_EM_CONSTRUCAO) {
+                elConstrucao.style.display = 'block';
+                elPrincipal.style.display = 'none';
+            } else {
+                elConstrucao.style.display = 'none';
+                elPrincipal.style.display = 'block';
+            }
+        }
 
         async function parsePlaylistCSV(url) {
             try {
@@ -482,11 +517,14 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            carregarAvisos();
-            carregarTextoSobre();
-            initRadioData();
-            carregarOfertas();
-            carregarVisualizacoes();
+            verificarModoConstrucao();
+            if (!MODO_EM_CONSTRUCAO) {
+                carregarAvisos();
+                carregarTextoSobre();
+                initRadioData();
+                carregarOfertas();
+                carregarVisualizacoes();
+            }
         });
     </script>
 </body>
